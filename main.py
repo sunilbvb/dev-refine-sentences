@@ -83,8 +83,19 @@ def main() -> None:
         action="store_true",
         help="Display configured API keys status and exit.",
     )
+    parser.add_argument(
+        "--daemon",
+        action="store_true",
+        help="Run as a persistent resident background daemon in RAM for sub-5ms latency.",
+    )
 
     args = parser.parse_args()
+
+    # Handle daemon mode startup
+    if args.daemon:
+        from daemon import run_daemon
+        run_daemon()
+        return
 
     # Handle API key configuration
     if args.set_key:
@@ -129,6 +140,28 @@ def main() -> None:
             print(f"   Orig: {e['original']}")
             print(f"   Ref : {e['refined']}\n")
         return
+
+    # Fast-Path: If resident daemon is active in RAM, delegate for sub-5ms latency!
+    if not args.text and args.mode in ["popup", "clipboard"] and args.engine == "auto":
+        from daemon import send_daemon_request
+        if send_daemon_request(mode=args.mode, tone=args.tone, paste=args.paste):
+            return
+
+    if args.mode == "cli" and args.engine == "auto" and args.text:
+        from daemon import query_daemon_refine
+        daemon_res = query_daemon_refine(args.text, tone=args.tone)
+        if daemon_res is not None:
+            refined = daemon_res["refined"]
+            history_mgr.record(
+                original=args.text,
+                refined=refined,
+                tone=args.tone,
+                engine=daemon_res.get("engine", "RuleRefiner (Daemon)"),
+            )
+            sys.stdout.write(refined)
+            if not refined.endswith("\n"):
+                sys.stdout.write("\n")
+            return
 
     refiner_manager = RefinerManager(
         preferred_engine=args.engine,

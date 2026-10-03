@@ -12,6 +12,7 @@ Features:
 
 import tkinter as tk
 from tkinter import ttk
+import threading
 from typing import Callable, Optional, List, Dict, Any
 from .diff_highlighter import compute_word_diff
 from .settings_dialog import SettingsDialog
@@ -47,6 +48,8 @@ class RefinePopup:
         self.get_explanations = get_explanations
         self.selected_tone = "standard"
         self.view_mode = "diff"  # 'diff' or 'edit'
+        # Tone prefetch cache for 0ms instant switching
+        self.tone_cache: Dict[str, str] = {"standard": initial_refined_text}
 
     def show(self) -> None:
         """Launch the preview dialog."""
@@ -181,7 +184,12 @@ class RefinePopup:
                 else:
                     btn.configure(bg="#45475A", fg="#CDD6F4")
 
-            updated = self.on_tone_change(tone)
+            if tone in self.tone_cache:
+                updated = self.tone_cache[tone]
+            else:
+                updated = self.on_tone_change(tone)
+                self.tone_cache[tone] = updated
+
             self.current_refined = updated
             render_preview()
             update_metrics_display()
@@ -459,6 +467,17 @@ class RefinePopup:
         render_preview()
         update_metrics_display()
         update_teach_display()
+
+        # Asynchronous parallel background prefetch of all remaining tones
+        def _prefetch_worker():
+            for _, t_key in tones:
+                if t_key not in self.tone_cache:
+                    try:
+                        self.tone_cache[t_key] = self.on_tone_change(t_key)
+                    except Exception:
+                        pass
+
+        threading.Thread(target=_prefetch_worker, daemon=True).start()
 
         # Smart Float-at-Cursor Positioning (near highlighted text)
         root.update_idletasks()

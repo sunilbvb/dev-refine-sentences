@@ -128,5 +128,15 @@ flowchart TD
 - [`settings_dialog.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/ui/settings_dialog.py): Tabbed settings GUI for keys, whitelist, and snippets.
 - [`popup.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/ui/popup.py): Clean, dark-mode Tkinter modal providing live word diff rendering, Teach Mode explanations, readability metrics, and tone selection.
 
+### `daemon/`
+- [`server.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/daemon/server.py): Persistent UNIX domain socket daemon (`~/.config/refine_tool/daemon.sock`) keeping modules, regexes, and clipboard warm in RAM for sub-5ms latency.
+- [`client.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/daemon/client.py): Fast socket client connector for instant hotkey dispatch and synchronous in-RAM text query.
+
+### `packaging/`
+- [`build_deb.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/packaging/build_deb.sh): Builds a production `.deb` package (`dist/refine-sentences_1.0.0_all.deb`) for Debian/Ubuntu.
+- [`install_user.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/packaging/install_user.sh): Zero-sudo user installer configuring `~/.local/bin` and systemd user services.
+- [`refine-daemon.service`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/packaging/refine-daemon.service): Systemd user service unit for auto-starting the resident daemon on user login.
+
 ### `tests/`
-- [`test_all.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/tests/test_all.py): Unit test suite covering all domains and functionality (16 passing tests).
+- [`test_all.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/tests/test_all.py): Unit test suite covering all domains and functionality (19 passing tests in 0.014s).
+

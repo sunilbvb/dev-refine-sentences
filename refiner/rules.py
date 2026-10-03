@@ -1,21 +1,27 @@
-"""Rule-based offline sentence refiner with Teach / Explanation Mode.
+"""Rule-based offline sentence refiner with Pre-compiled Regex and Teach Mode.
 
 100% Python Standard Library. Zero external dependencies.
 """
 
 import re
 import time
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Any, Optional, Pattern
 from .base import BaseRefiner
 from config.settings import ConfigManager
 
 
-class RuleBasedRefiner(BaseRefiner):
-    """Deterministic, rule-based sentence polisher with Teach/Explanation tracking."""
+# Global pre-compiled regexes for maximum throughput
+RE_SPACES = re.compile(r"[ \t]+")
+RE_DUPLICATE_WORDS = re.compile(r"\b(\w+)\s+\1\b", re.IGNORECASE)
+RE_PUNCT_SPACE_BEFORE = re.compile(r"\s+([,.:;?!])")
+RE_PUNCT_SPACE_AFTER = re.compile(r"([,.:;?!])([A-Za-z])")
+RE_PUNCT_COLLAPSE = re.compile(r"([!?,]){2,}")
+RE_SENTENCE_START = re.compile(r"([.!?]\s+)([a-z])")
+RE_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
-    def __init__(self, config_manager: Optional[ConfigManager] = None):
-        self.config_manager = config_manager or ConfigManager()
-        self.last_explanations: List[str] = []
+
+class RuleBasedRefiner(BaseRefiner):
+    """Deterministic, rule-based sentence polisher with Pre-compiled Regexes and Caching."""
 
     # Common typos and shorthand normalization
     TYPO_MAP: Dict[str, str] = {
@@ -38,7 +44,7 @@ class RuleBasedRefiner(BaseRefiner):
         r"\bshouldnt\b": "shouldn't",
         r"\bwouldnt\b": "wouldn't",
         r"\byoure\b": "you're",
-        r"\btheyre\b": "theyre",
+        r"\btheyre\b": "they're",
         r"\bweve\b": "we've",
         r"\bwhats\b": "what's",
         r"\bthats\b": "that's",
@@ -58,6 +64,14 @@ class RuleBasedRefiner(BaseRefiner):
         r"\bnoone\b": "no one",
         r"\bthx\b": "thanks",
         r"\bplz\b": "please",
+        r"\bpls\b": "please",
+        r"\basap\b": "as soon as possible",
+        r"\bbtw\b": "by the way",
+        r"\bfyi\b": "for your information",
+        r"\brn\b": "right now",
+        r"\btmrw\b": "tomorrow",
+        r"\byday\b": "yesterday",
+        r"\bmsg\b": "message",
         r"\bu\b": "you",
         r"\br\b": "are",
         r"\bur\b": "your",
@@ -129,6 +143,29 @@ class RuleBasedRefiner(BaseRefiner):
         (r"\bprompt response required\b", "whenever you get a chance", "Courtesy: Relaxed urgency tone."),
     ]
 
+    # Class-level pre-compiled regex structures (compiled once for lifetime of process)
+    _COMPILED_TYPOS: List[Tuple[Pattern, str, str]] = [
+        (re.compile(p, re.IGNORECASE), repl, p.replace(r"\b", "")) for p, repl in TYPO_MAP.items()
+    ]
+    _COMPILED_GRAMMAR: List[Tuple[Pattern, str, str]] = [
+        (re.compile(p, re.IGNORECASE), repl, reason) for p, repl, reason in GRAMMAR_FIXES
+    ]
+    _COMPILED_CONCISE: List[Tuple[Pattern, str, str]] = [
+        (re.compile(p, re.IGNORECASE), repl, reason) for p, repl, reason in CONCISE_REDUNDANCIES
+    ]
+    _COMPILED_PRO: List[Tuple[Pattern, str, str]] = [
+        (re.compile(p, re.IGNORECASE), repl, reason) for p, repl, reason in PROFESSIONAL_MAP
+    ]
+    _COMPILED_FRIENDLY: List[Tuple[Pattern, str, str]] = [
+        (re.compile(p, re.IGNORECASE), repl, reason) for p, repl, reason in FRIENDLY_MAP
+    ]
+
+    def __init__(self, config_manager: Optional[ConfigManager] = None):
+        self.config_manager = config_manager or ConfigManager()
+        self.last_explanations: List[str] = []
+        # In-memory LRU cache for 0ms repeated refinements
+        self._cache: Dict[Tuple[str, str], Tuple[str, List[str]]] = {}
+
     @property
     def name(self) -> str:
         return "Built-in Rule Engine (Offline Standard Library)"
@@ -159,6 +196,12 @@ class RuleBasedRefiner(BaseRefiner):
             self.last_explanations = []
             return ""
 
+        cache_key = (text.strip(), tone.lower().strip())
+        if cache_key in self._cache:
+            cached_result, cached_explanations = self._cache[cache_key]
+            self.last_explanations = list(cached_explanations)
+            return cached_result
+
         result = text.strip()
         self.last_explanations = []
         normalized_tone = tone.lower().strip()
@@ -183,53 +226,52 @@ class RuleBasedRefiner(BaseRefiner):
                 result = re.sub(pattern, key, result, flags=re.IGNORECASE)
                 self.last_explanations.append(f"Dictionary: Preserved protected term '{word}'.")
 
-        # Step 2: Clean excess whitespace
-        result = re.sub(r"[ \t]+", " ", result)
+        # Step 2: Clean excess whitespace using precompiled regex
+        result = RE_SPACES.sub(" ", result)
 
-        # Step 3: Fix typos and abbreviations
-        for pattern, replacement in self.TYPO_MAP.items():
-            if re.search(pattern, result, flags=re.IGNORECASE):
-                result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
-                clean_term = pattern.replace(r"\b", "")
+        # Step 3: Fix typos and abbreviations using precompiled regexes
+        for rx, replacement, clean_term in self._COMPILED_TYPOS:
+            if rx.search(result):
+                result = rx.sub(replacement, result)
                 self.last_explanations.append(f"Spelling: Fixed typo/shorthand '{clean_term}' → '{replacement}'.")
 
-        # Step 4: Fix common grammar & irregular verbs
-        for pattern, replacement, reason in self.GRAMMAR_FIXES:
-            if re.search(pattern, result, flags=re.IGNORECASE):
-                result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+        # Step 4: Fix common grammar & irregular verbs using precompiled regexes
+        for rx, replacement, reason in self._COMPILED_GRAMMAR:
+            if rx.search(result):
+                result = rx.sub(replacement, result)
                 self.last_explanations.append(f"Grammar: {reason}")
 
-        # Step 5: Apply Tone-specific transformations
+        # Step 5: Apply Tone-specific transformations using precompiled regexes
         if normalized_tone == "concise":
-            for pattern, replacement, reason in self.CONCISE_REDUNDANCIES:
-                if re.search(pattern, result, flags=re.IGNORECASE):
-                    result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+            for rx, replacement, reason in self._COMPILED_CONCISE:
+                if rx.search(result):
+                    result = rx.sub(replacement, result)
                     self.last_explanations.append(reason)
         elif normalized_tone == "professional":
-            for pattern, replacement, reason in self.PROFESSIONAL_MAP:
-                if re.search(pattern, result, flags=re.IGNORECASE):
-                    result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+            for rx, replacement, reason in self._COMPILED_PRO:
+                if rx.search(result):
+                    result = rx.sub(replacement, result)
                     self.last_explanations.append(reason)
         elif normalized_tone == "friendly":
-            for pattern, replacement, reason in self.FRIENDLY_MAP:
-                if re.search(pattern, result, flags=re.IGNORECASE):
-                    result = re.sub(pattern, replacement, result, flags=re.IGNORECASE)
+            for rx, replacement, reason in self._COMPILED_FRIENDLY:
+                if rx.search(result):
+                    result = rx.sub(replacement, result)
                     self.last_explanations.append(reason)
 
-        # Step 6: Fix word duplicates ("the the" -> "the", "please please" -> "please")
-        dup_match = re.search(r"\b(\w+)\s+\1\b", result, flags=re.IGNORECASE)
+        # Step 6: Fix word duplicates using precompiled regex
+        dup_match = RE_DUPLICATE_WORDS.search(result)
         if dup_match:
             word = dup_match.group(1)
-            result = re.sub(r"\b(\w+)\s+\1\b", r"\1", result, flags=re.IGNORECASE)
+            result = RE_DUPLICATE_WORDS.sub(r"\1", result)
             self.last_explanations.append(f"Redundancy: Removed repeated word '{word} {word}'.")
 
-        # Step 7: Fix punctuation spacing
-        result = re.sub(r"\s+([,.:;?!])", r"\1", result)
-        result = re.sub(r"([,.:;?!])([A-Za-z])", r"\1 \2", result)
-        result = re.sub(r"([!?,]){2,}", r"\1", result)
+        # Step 7: Fix punctuation spacing using precompiled regexes
+        result = RE_PUNCT_SPACE_BEFORE.sub(r"\1", result)
+        result = RE_PUNCT_SPACE_AFTER.sub(r"\1 \2", result)
+        result = RE_PUNCT_COLLAPSE.sub(r"\1", result)
 
         # Step 8: Clean whitespace and strip
-        result = re.sub(r"[ \t]+", " ", result).strip()
+        result = RE_SPACES.sub(" ", result).strip()
 
         # Step 9: Capitalize sentence beginnings
         orig_first = result[0] if result else ""
@@ -255,6 +297,11 @@ class RuleBasedRefiner(BaseRefiner):
             result = f"Hi team,\n\n{result}\n\nBest regards,"
             self.last_explanations.append("Structure: Added professional email greeting and sign-off.")
 
+        # Store in LRU cache (limit size to 256)
+        if len(self._cache) > 256:
+            self._cache.pop(next(iter(self._cache)))
+        self._cache[cache_key] = (result, list(self.last_explanations))
+
         return result
 
     def _capitalize_sentences(self, text: str) -> str:
@@ -267,12 +314,12 @@ class RuleBasedRefiner(BaseRefiner):
         if text:
             text = text[0].upper() + text[1:]
 
-        text = re.sub(r"([.!?]\s+)([a-z])", repl, text)
+        text = RE_SENTENCE_START.sub(repl, text)
         return text
 
     def _format_as_bullets(self, text: str) -> str:
         """Convert sentence string into formatted markdown bullet list."""
-        sentences = re.split(r"(?<=[.!?])\s+", text)
+        sentences = RE_SENTENCE_SPLIT.split(text)
         bullets = []
         for s in sentences:
             s_clean = s.strip()

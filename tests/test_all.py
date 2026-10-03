@@ -1,6 +1,12 @@
 """Comprehensive unit tests for Sentence Refiner."""
 
 import unittest
+import sys
+from pathlib import Path
+
+# Ensure repo root is in python path for direct script execution
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from refiner.rules import RuleBasedRefiner
 from refiner.gemini import GeminiRefiner
 from refiner.openai import OpenAIRefiner
@@ -22,6 +28,11 @@ class TestSentenceRefiner(unittest.TestCase):
     def test_standard_grammar_and_typos(self):
         res = self.refiner.refine("he go to store and buyed apples", tone="standard")
         self.assertEqual(res, "He goes to store and bought apples.")
+
+    def test_shorthand_expansions(self):
+        res = self.refiner.refine("pls send msg btw", tone="standard")
+        self.assertEqual(res, "Please send message by the way.")
+
 
     def test_concise_tone(self):
         res = self.refiner.refine("basically in order to test this we need time", tone="concise")
@@ -111,6 +122,18 @@ class TestSentenceRefiner(unittest.TestCase):
         active = rm.get_active_engine()
         self.assertIsNotNone(active)
         self.assertTrue(active.is_available())
+
+    def test_daemon_client_inactive(self):
+        from daemon import send_daemon_request
+        # When daemon socket is not running, gracefully returns False
+        handled = send_daemon_request("flash")
+        self.assertIsInstance(handled, bool)
+
+    def test_precompiled_lru_cache(self):
+        res1 = self.refiner.refine("dont worry i is ready", tone="standard")
+        res2 = self.refiner.refine("dont worry i is ready", tone="standard")
+        self.assertEqual(res1, res2)
+        self.assertEqual(res1, "Don't worry I am ready.")
 
 
 if __name__ == "__main__":

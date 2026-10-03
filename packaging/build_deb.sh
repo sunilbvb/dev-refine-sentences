@@ -4,7 +4,7 @@
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="1.0.0"
+VERSION="1.2.0"
 PKG_NAME="refine-sentences"
 BUILD_DIR="${PROJECT_DIR}/build/deb"
 DIST_DIR="${PROJECT_DIR}/dist"
@@ -41,6 +41,7 @@ cp -r "${PROJECT_DIR}/history" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp -r "${PROJECT_DIR}/clipboard" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp -r "${PROJECT_DIR}/injector" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp -r "${PROJECT_DIR}/ui" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp -r "${PROJECT_DIR}/daemon" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp "${PROJECT_DIR}/main.py" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 
 # Clean any pycache in build package
@@ -70,7 +71,11 @@ Type=Application
 Categories=Utility;TextTools;
 EOF
 
-# 5. Build the .deb package
+# 5. Install systemd user service
+mkdir -p "${PKG_ROOT}/usr/lib/systemd/user"
+cp "${PROJECT_DIR}/packaging/refine-daemon.service" "${PKG_ROOT}/usr/lib/systemd/user/refine-daemon.service"
+
+# 6. Build the .deb package
 echo "==> Building Debian package with dpkg-deb..."
 dpkg-deb --root-owner-group --build "${PKG_ROOT}" "${DIST_DIR}/${PKG_NAME}_${VERSION}_all.deb"
 
