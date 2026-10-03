@@ -63,7 +63,13 @@ exec python3 /usr/share/refine-sentences/main.py --mode=clipboard --paste "$@"
 EOF
 chmod +x "${PKG_ROOT}/usr/bin/refine-sentences-flash"
 
-# 4. Create .desktop launcher entry
+cat <<'EOF' > "${PKG_ROOT}/usr/bin/refine-portal"
+#!/usr/bin/env bash
+exec /usr/share/refine-sentences/launch_portal.sh "$@"
+EOF
+chmod +x "${PKG_ROOT}/usr/bin/refine-portal"
+
+# 4. Create .desktop launcher entries
 cat <<EOF > "${PKG_ROOT}/usr/share/applications/${PKG_NAME}.desktop"
 [Desktop Entry]
 Name=Sentence Refiner
@@ -74,9 +80,14 @@ Type=Application
 Categories=Utility;TextTools;
 EOF
 
-# 5. Install systemd user service
+cp "${PROJECT_DIR}/packaging/refine-portal.desktop" "${PKG_ROOT}/usr/share/applications/refine-portal.desktop"
+cp "${PROJECT_DIR}/launch_portal.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+chmod +x "${PKG_ROOT}/usr/share/${PKG_NAME}/launch_portal.sh"
+
+# 5. Install systemd user services
 mkdir -p "${PKG_ROOT}/usr/lib/systemd/user"
 cp "${PROJECT_DIR}/packaging/refine-daemon.service" "${PKG_ROOT}/usr/lib/systemd/user/refine-daemon.service"
+cp "${PROJECT_DIR}/packaging/refine-web.service" "${PKG_ROOT}/usr/lib/systemd/user/refine-web.service"
 
 # 6. Build the .deb package
 echo "==> Building Debian package with dpkg-deb..."

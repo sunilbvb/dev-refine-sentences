@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Sentence Refiner Web Portal
+Comment=Interactive developer documentation and sentence refinement portal
+Exec=/bin/bash -c "python3 %h/.local/share/refine-sentences/main.py --serve 8080 & sleep 0.5 && xdg-open http://localhost:8080"
+Icon=text-editor
+Terminal=false
+Type=Application
+Categories=Utility;Development;

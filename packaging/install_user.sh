@@ -42,7 +42,21 @@ exec python3 "${HOME}/.local/share/refine-sentences/main.py" --mode=clipboard --
 EOF
 chmod +x "${BIN_DIR}/refine-sentences-flash"
 
-# Install systemd user service
+cat <<'EOF' > "${BIN_DIR}/refine-portal"
+#!/usr/bin/env bash
+exec "${HOME}/.local/share/refine-sentences/launch_portal.sh" "$@"
+EOF
+chmod +x "${BIN_DIR}/refine-portal"
+
+# Copy 1-click launcher script to app dir
+cp "${PROJECT_DIR}/launch_portal.sh" "${APP_DIR}/"
+chmod +x "${APP_DIR}/launch_portal.sh"
+
+# Install .desktop application launcher
+mkdir -p "${HOME}/.local/share/applications"
+cp "${PROJECT_DIR}/packaging/refine-portal.desktop" "${HOME}/.local/share/applications/"
+
+# Install systemd user services (daemon and optional web portal)
 cat <<EOF > "${SYSTEMD_USER_DIR}/refine-daemon.service"
 [Unit]
 Description=Universal Sentence Refiner Resident Daemon
@@ -58,13 +72,34 @@ RestartSec=3
 WantedBy=default.target
 EOF
 
-# Reload and enable systemd user service if systemctl is available
+cat <<EOF > "${SYSTEMD_USER_DIR}/refine-web.service"
+[Unit]
+Description=Universal Sentence Refiner Web Documentation Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 ${APP_DIR}/main.py --serve 8080
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
+EOF
+
+# Reload and enable systemd user services if systemctl is available
 if command -v systemctl &>/dev/null; then
     systemctl --user daemon-reload
     systemctl --user enable --now refine-daemon.service || true
-    echo "==> Resident daemon service enabled and started via systemd --user!"
+    systemctl --user enable --now refine-web.service || true
+    echo "==> Resident daemon & Web portal services enabled via systemd --user!"
 fi
 
 echo "==> Installation complete!"
+echo "    Commands available in ${BIN_DIR}:"
+echo "      - refine-sentences       (Interactive popup)"
+echo "      - refine-sentences-flash (Instant silent replace)"
+echo "      - refine-portal          (1-Click Web portal launcher)"
+
 echo "    Commands available: ${BIN_DIR}/refine-sentences and ${BIN_DIR}/refine-sentences-flash"
 echo "    Ensure ${BIN_DIR} is in your PATH."

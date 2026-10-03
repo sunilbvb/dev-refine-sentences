@@ -6,6 +6,7 @@
 import http.server
 import json
 import socket
+import os
 from pathlib import Path
 
 from daemon import query_daemon_refine
@@ -22,7 +23,7 @@ class DocsRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(PROJECT_ROOT), **kwargs)
 
     def do_GET(self):
-        if self.path == "/api/status":
+        if self.path in ["/api/status", "/api/server/status"]:
             daemon_active = False
             if SOCKET_PATH.exists():
                 try:
@@ -40,6 +41,8 @@ class DocsRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "status": "online",
                 "daemon_active": daemon_active,
                 "version": "1.2.0",
+                "pid": os.getpid(),
+                "port": getattr(self.server, "server_port", 8080),
             }
             self._send_json(payload)
             return
@@ -48,6 +51,12 @@ class DocsRequestHandler(http.server.SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self):
+        if self.path == "/api/server/stop":
+            self._send_json({"status": "shutting_down", "message": "Web server stopped."})
+            import threading
+            threading.Thread(target=self.server.shutdown, daemon=True).start()
+            return
+
         if self.path == "/api/refine":
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length).decode("utf-8")

@@ -1,0 +1,12 @@
+[Unit]
+Description=Universal Sentence Refiner Web Documentation Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/.local/share/refine-sentences/main.py --serve 8080
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
