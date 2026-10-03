@@ -2,9 +2,9 @@
 # restart.sh - Restart Universal Sentence Refiner Daemon & Web Portal
 set -e
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "==> Restarting Universal Sentence Refiner Services..."
-bash "${PROJECT_DIR}/stop.sh"
+bash "${SCRIPT_DIR}/stop.sh"
 sleep 0.6
-bash "${PROJECT_DIR}/start.sh" "$@"
+bash "${SCRIPT_DIR}/start.sh" "$@"

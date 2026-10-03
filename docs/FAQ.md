@@ -16,7 +16,7 @@ A: Teach Mode explains the exact grammatical, typographical, or stylistic reason
 A: When you click **Apply & Copy** or press **Enter** in the suggestion popup, the popup closes, focuses back to your previous application, and uses native Linux `Atspi` to send a `Ctrl+V` keystroke. Because your rough text is already highlighted, the paste immediately replaces it.
 
 ### Q: How does Instant Flash Mode work?
-A: If you don't want a popup dialog and just want instant in-place refinement, bind `refine_flash.sh` to a hotkey (like `Super+Shift+R`). It grabs selected text, refines it silently, and pastes it back in ~50ms (or ~2ms with daemon)!
+A: If you don't want a popup dialog and just want instant in-place refinement, bind `scripts/refine_flash.sh` (or `refine-sentences-flash`) to a hotkey (like `Super+Shift+R`). It grabs selected text, refines it silently, and pastes it back in ~50ms (or ~2ms with daemon)!
 
 ### Q: What makes this tool achieve sub-5ms latency?
 A: Three performance engineering pillars:

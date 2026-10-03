@@ -18,7 +18,7 @@ else
 fi
 
 # Web server status
-if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${PORT}/api/status', timeout=0.4)" &>/dev/null; then
+if python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${PORT}/api/status', timeout=1.0)" &>/dev/null; then
     echo "  🌐 Web Portal:       🟢 ONLINE (http://localhost:${PORT})"
 else
     echo "  🌐 Web Portal:       🔴 OFFLINE"

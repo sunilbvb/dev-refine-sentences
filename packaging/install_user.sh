@@ -13,16 +13,10 @@ mkdir -p "${SYSTEMD_USER_DIR}"
 mkdir -p "${APP_DIR}"
 
 # Copy application files
-cp -r "${PROJECT_DIR}/refiner" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/metrics" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/config" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/history" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/clipboard" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/injector" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/ui" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/daemon" "${APP_DIR}/"
+cp -r "${PROJECT_DIR}/src" "${APP_DIR}/"
+cp -r "${PROJECT_DIR}/scripts" "${APP_DIR}/"
+cp -r "${PROJECT_DIR}/docs" "${APP_DIR}/"
 cp -r "${PROJECT_DIR}/web" "${APP_DIR}/"
-cp -r "${PROJECT_DIR}/web_server" "${APP_DIR}/"
 cp "${PROJECT_DIR}/index.html" "${APP_DIR}/"
 cp "${PROJECT_DIR}/main.py" "${APP_DIR}/"
 
@@ -44,17 +38,11 @@ chmod +x "${BIN_DIR}/refine-sentences-flash"
 
 cat <<'EOF' > "${BIN_DIR}/refine-portal"
 #!/usr/bin/env bash
-exec "${HOME}/.local/share/refine-sentences/launch_portal.sh" "$@"
+exec "${HOME}/.local/share/refine-sentences/scripts/launch_portal.sh" "$@"
 EOF
 chmod +x "${BIN_DIR}/refine-portal"
 
-# Copy 1-click management scripts to app dir
-cp "${PROJECT_DIR}/launch_portal.sh" "${APP_DIR}/"
-cp "${PROJECT_DIR}/start.sh" "${APP_DIR}/"
-cp "${PROJECT_DIR}/stop.sh" "${APP_DIR}/"
-cp "${PROJECT_DIR}/restart.sh" "${APP_DIR}/"
-cp "${PROJECT_DIR}/status.sh" "${APP_DIR}/"
-chmod +x "${APP_DIR}/"*.sh
+chmod +x "${APP_DIR}/scripts/"*.sh
 
 # Install .desktop application launcher
 mkdir -p "${HOME}/.local/share/applications"

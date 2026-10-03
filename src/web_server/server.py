@@ -12,7 +12,7 @@ from pathlib import Path
 from daemon import query_daemon_refine
 from refiner import RefinerManager
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SOCKET_PATH = Path.home() / ".config" / "refine_tool" / "daemon.sock"
 
 

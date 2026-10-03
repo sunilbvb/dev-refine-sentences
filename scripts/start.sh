@@ -3,7 +3,7 @@
 set -e
 
 PORT="${1:-8080}"
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG_DIR="${HOME}/.config/refine_tool"
 mkdir -p "${CONFIG_DIR}"
 

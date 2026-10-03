@@ -34,16 +34,10 @@ Description: Universal Sentence Refiner
 EOF
 
 # 2. Copy source code files
-cp -r "${PROJECT_DIR}/refiner" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/metrics" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/config" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/history" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/clipboard" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/injector" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/ui" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/daemon" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp -r "${PROJECT_DIR}/src" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp -r "${PROJECT_DIR}/scripts" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp -r "${PROJECT_DIR}/docs" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp -r "${PROJECT_DIR}/web" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp -r "${PROJECT_DIR}/web_server" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp "${PROJECT_DIR}/index.html" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp "${PROJECT_DIR}/main.py" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 
@@ -65,7 +59,7 @@ chmod +x "${PKG_ROOT}/usr/bin/refine-sentences-flash"
 
 cat <<'EOF' > "${PKG_ROOT}/usr/bin/refine-portal"
 #!/usr/bin/env bash
-exec /usr/share/refine-sentences/launch_portal.sh "$@"
+exec /usr/share/refine-sentences/scripts/launch_portal.sh "$@"
 EOF
 chmod +x "${PKG_ROOT}/usr/bin/refine-portal"
 
@@ -81,12 +75,7 @@ Categories=Utility;TextTools;
 EOF
 
 cp "${PROJECT_DIR}/packaging/refine-portal.desktop" "${PKG_ROOT}/usr/share/applications/refine-portal.desktop"
-cp "${PROJECT_DIR}/launch_portal.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp "${PROJECT_DIR}/start.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp "${PROJECT_DIR}/stop.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp "${PROJECT_DIR}/restart.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-cp "${PROJECT_DIR}/status.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-chmod +x "${PKG_ROOT}/usr/share/${PKG_NAME}/"*.sh
+chmod +x "${PKG_ROOT}/usr/share/${PKG_NAME}/scripts/"*.sh
 
 # 5. Install systemd user services
 mkdir -p "${PKG_ROOT}/usr/lib/systemd/user"

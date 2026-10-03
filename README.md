@@ -63,43 +63,32 @@ Built with **100% Python Standard Library** (zero third-party pip dependencies).
 
 ```
 dev-refine-sentences/
-├── daemon/                       # Domain sub-package: Resident UNIX socket daemon
+├── docs/                         # Comprehensive project documentation
+│   ├── ARCHITECTURE.md           # System design & component flow
+│   ├── CHANGELOG.md              # Semantic release notes
+│   ├── CONTRIBUTING.md           # Contributor guidelines
+│   ├── CODE_OF_CONDUCT.md        # Community standards
+│   ├── SECURITY.md               # Security & key management policy
+│   └── FAQ.md                    # Common questions & troubleshooting
+├── scripts/                      # 1-Click service & trigger scripts
+│   ├── start.sh                  # Start daemon & web portal
+│   ├── stop.sh                   # Stop all background services
+│   ├── restart.sh                # Restart services cleanly
+│   ├── status.sh                 # Live status health probe
+│   ├── launch_portal.sh          # Open portal in browser
+│   ├── refine_trigger.sh         # OS popup shortcut hook
+│   └── refine_flash.sh           # OS flash replace shortcut hook
+├── src/                          # Core Python source packages
 │   ├── __init__.py               # Package exports
-│   ├── server.py                 # Resident socket server (sub-5ms hot-in-RAM processing)
-│   └── client.py                 # Fast socket client dispatcher
-├── refiner/                      # Domain sub-package: Refinement engines
-│   ├── __init__.py               # Package exports
-│   ├── base.py                   # Abstract BaseRefiner interface
-│   ├── rules.py                  # Pre-compiled regex rule engine + LRU cache
-│   ├── gemini.py                 # Google Gemini API connector (stdlib urllib)
-│   ├── openai.py                 # OpenAI / ChatGPT API connector (stdlib urllib)
-│   ├── claude.py                 # Anthropic Claude API connector (stdlib urllib)
-│   ├── ollama.py                 # Local Ollama HTTP connector (stdlib urllib)
-│   ├── languagetool.py           # Local LanguageTool HTTP connector
-│   └── manager.py                # Engine registry, auto-resolver, and explanation getter
-├── metrics/                      # Domain sub-package: Readability & metrics
-│   ├── __init__.py               # Package exports
-│   └── readability.py            # Flesch-Kincaid Reading Ease, Grade Level, syllable counter
-├── config/                       # Domain sub-package: User settings & whitelist
-│   ├── __init__.py               # Package exports
-│   └── settings.py               # Whitelist, dynamic snippets, API keys, and config manager
-├── history/                      # Domain sub-package: Audit & undo logs
-│   ├── __init__.py               # Package exports
-│   └── history_manager.py        # Persistent history log manager
-├── clipboard/                    # Domain sub-package: Clipboard management
-│   ├── __init__.py               # Package exports
-│   └── manager.py                # Primary selection & Wayland/X11 clipboard wrapper
-├── injector/                     # Domain sub-package: OS keystrokes, audio & alerts
-│   ├── __init__.py               # Package exports
-│   └── injector.py               # Atspi Wayland key event injection, sound chime & notify-send
-├── ui/                           # Domain sub-package: User Interface
-│   ├── __init__.py               # Package exports
-│   ├── diff_highlighter.py       # Stdlib difflib word-level diff tokenizer
-│   ├── settings_dialog.py        # Tkinter Settings modal (API keys, whitelist, snippets)
-│   └── popup.py                  # Tkinter floating preview modal with float-at-cursor & hotkeys
-├── web_server/                   # Domain sub-package: Web documentation server
-│   ├── __init__.py               # Package exports
-│   └── server.py                 # Stdlib HTTP server connecting portal to refiner daemon
+│   ├── refiner/                  # NLP engines, rules, and AI connectors
+│   ├── daemon/                   # In-RAM socket daemon server & client
+│   ├── ui/                       # Desktop Tkinter popup & diff highlighter
+│   ├── clipboard/                # Wayland & X11 selection manager
+│   ├── injector/                 # Atspi key simulation & sound feedback
+│   ├── metrics/                  # Linguistic readability metrics
+│   ├── config/                   # Configuration & technical whitelist
+│   ├── history/                  # Audit log & history manager
+│   └── web_server/               # Developer portal HTTP server
 ├── web/                          # Modular web portal frontend assets
 │   ├── css/styles.css            # Modern dark-mode styling
 │   └── js/
@@ -113,27 +102,16 @@ dev-refine-sentences/
 ├── packaging/                    # Distribution & packaging
 │   ├── build_deb.sh              # Standalone .deb installer builder script
 │   ├── install_user.sh           # Zero-sudo user installer script
-│   └── refine-daemon.service     # Systemd user service unit definition
-├── tests/                        # Unit test suite
+│   ├── refine-daemon.service     # Systemd user service for daemon
+│   ├── refine-web.service        # Systemd user service for web portal
+│   └── refine-portal.desktop     # Desktop application entry
+├── tests/                        # Automated unit test suite
 │   ├── __init__.py               # Package exports
 │   └── test_all.py               # Comprehensive unit tests (20 tests)
 ├── index.html                    # Interactive web portal & developer documentation hub
-├── main.py                       # CLI orchestrator & entry point
-├── start.sh                      # 1-Click start (resident daemon + web portal)
-├── stop.sh                       # 1-Click stop all background services
-├── restart.sh                    # 1-Click restart all services cleanly
-├── status.sh                     # Live status checker (ports, socket, daemon)
-├── launch_portal.sh              # 1-Click web portal launcher & browser opener
-├── refine_trigger.sh             # Shell wrapper for OS global hotkey (Popup modal)
-├── refine_flash.sh               # Shell wrapper for OS global hotkey (Instant silent replace)
-├── ARCHITECTURE.md               # Architectural specification & component flow
-├── CONTRIBUTING.md               # Contributor guidelines
-├── CODE_OF_CONDUCT.md            # Contributor Covenant standard
-├── SECURITY.md                   # Security & API key policy
-├── CHANGELOG.md                  # Release version history
+├── main.py                       # Main CLI entry point
 ├── LICENSE                       # MIT License
-├── FAQ.md                        # Common questions & troubleshooting
-└── README.md                     # Project documentation
+└── README.md                     # Project overview & quickstart
 
 ---
 

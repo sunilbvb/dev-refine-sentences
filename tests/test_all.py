@@ -4,8 +4,10 @@ import unittest
 import sys
 from pathlib import Path
 
-# Ensure repo root is in python path for direct script execution
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Ensure repo root and src/ are in python path for direct test execution
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "src"))
+sys.path.insert(0, str(REPO_ROOT))
 
 from refiner.rules import RuleBasedRefiner
 from refiner.gemini import GeminiRefiner
