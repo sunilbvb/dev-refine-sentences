@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local user configs & caches
+.config/
+history.json
+config.json
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE / Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
