@@ -97,11 +97,27 @@ dev-refine-sentences/
 │   ├── diff_highlighter.py       # Stdlib difflib word-level diff tokenizer
 │   ├── settings_dialog.py        # Tkinter Settings modal (API keys, whitelist, snippets)
 │   └── popup.py                  # Tkinter floating preview modal with float-at-cursor & hotkeys
+├── web_server/                   # Domain sub-package: Web documentation server
+│   ├── __init__.py               # Package exports
+│   └── server.py                 # Stdlib HTTP server connecting portal to refiner daemon
+├── web/                          # Modular web portal frontend assets
+│   ├── css/styles.css            # Modern dark-mode styling
+│   └── js/
+│       ├── app.js                # Frontend entry point orchestrator
+│       └── modules/              # Focused single-responsibility JS modules
+│           ├── diff.js           # SequenceMatcher word diff tokenizer
+│           ├── metrics.js        # Linguistic readability analysis
+│           ├── rules_engine.js   # Offline in-browser rule engine fallback
+│           ├── api_client.js     # Server & daemon API bridge
+│           └── tabs.js           # Navigation & code snippet copy utilities
 ├── packaging/                    # Distribution & packaging
-│   └── build_deb.sh              # Standalone .deb installer builder script
+│   ├── build_deb.sh              # Standalone .deb installer builder script
+│   ├── install_user.sh           # Zero-sudo user installer script
+│   └── refine-daemon.service     # Systemd user service unit definition
 ├── tests/                        # Unit test suite
 │   ├── __init__.py               # Package exports
-│   └── test_all.py               # Comprehensive unit tests (18 tests)
+│   └── test_all.py               # Comprehensive unit tests (20 tests)
+├── index.html                    # Interactive web portal & developer documentation hub
 ├── main.py                       # CLI orchestrator & entry point
 ├── refine_trigger.sh             # Shell wrapper for OS global hotkey (Popup modal)
 ├── refine_flash.sh               # Shell wrapper for OS global hotkey (Instant silent replace)
@@ -113,6 +129,21 @@ dev-refine-sentences/
 ├── LICENSE                       # MIT License
 ├── FAQ.md                        # Common questions & troubleshooting
 └── README.md                     # Project documentation
+
+---
+
+## 🌐 Interactive Web Portal & Documentation Hub (`index.html`)
+
+Universal Sentence Refiner includes a self-contained developer portal and interactive playground:
+
+1. **Serve locally via Python Standard Library**:
+   ```bash
+   python3 main.py --serve 8080
+   ```
+   Open [http://localhost:8080](http://localhost:8080) to interact with live sentence refinement connected to your resident daemon in RAM!
+
+2. **Standalone Browser Mode**:
+   You can also double-click `index.html` or open `file:///.../index.html` directly in any web browser without running any web server—it includes an embedded JavaScript fallback rule engine for 100% offline testing.
 ```
 
 ---

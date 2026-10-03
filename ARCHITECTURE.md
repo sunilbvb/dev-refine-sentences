@@ -137,6 +137,20 @@ flowchart TD
 - [`install_user.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/packaging/install_user.sh): Zero-sudo user installer configuring `~/.local/bin` and systemd user services.
 - [`refine-daemon.service`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/packaging/refine-daemon.service): Systemd user service unit for auto-starting the resident daemon on user login.
 
+### `web_server/`
+- [`server.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/web_server/server.py): Stdlib `http.server` serving static documentation and developer playground, connecting HTTP `/api/refine` requests directly to the in-RAM daemon socket.
+
+### `web/`
+- Modular vanilla JavaScript and modern Catppuccin dark-mode CSS:
+  - `css/styles.css`: Responsive, GitHub/Tailwind dark theme.
+  - `js/modules/diff.js`: Word-level LCS diff algorithm.
+  - `js/modules/metrics.js`: In-browser Flesch Reading Ease & Grade Level engine.
+  - `js/modules/rules_engine.js`: In-browser deterministic rule engine for 100% offline static testing.
+  - `js/modules/api_client.js`: HTTP API client bridging web UI with local daemon socket.
+  - `js/modules/tabs.js`: Tabbed navigation and interactive copy helpers.
+  - `js/app.js`: Main frontend orchestrator.
+
 ### `tests/`
-- [`test_all.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/tests/test_all.py): Unit test suite covering all domains and functionality (19 passing tests in 0.014s).
+- [`test_all.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/tests/test_all.py): Unit test suite covering all domains, web server endpoints, and daemon functionality (20 passing tests).
+
 

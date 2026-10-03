@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Debian `.deb` package now installs `/usr/lib/systemd/user/refine-daemon.service`.
 - **Extended Shorthand Vocabulary**:
   - Added expansions for `pls`, `asap`, `btw`, `fyi`, `rn`, `tmrw`, `yday`, `msg`.
+- **Interactive Web Portal & Developer Documentation Hub (`index.html`)**:
+  - Complete documentation and interactive playground portal with live word diff, Teach mode explanations, and readability metrics.
+  - Fully offline capable in static browser mode, and live connected when served.
+- **Built-in Stdlib Documentation Server (`web_server/`)**:
+  - Launch with `python3 main.py --serve [PORT]` to serve portal locally.
+  - Connects web `/api/refine` requests directly to resident daemon socket in RAM.
+- **Modular Frontend Architecture (`web/`)**:
+  - Structured domain modules: `web/js/modules/diff.js`, `metrics.js`, `rules_engine.js`, `api_client.js`, `tabs.js`, and `app.js`.
 
 ## [1.1.0] - 2026-10-03
 

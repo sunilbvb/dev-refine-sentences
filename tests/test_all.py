@@ -135,6 +135,45 @@ class TestSentenceRefiner(unittest.TestCase):
         self.assertEqual(res1, res2)
         self.assertEqual(res1, "Don't worry I am ready.")
 
+    def test_web_server_endpoints(self):
+        import threading
+        import urllib.request
+        import json
+        from http.server import HTTPServer
+        from web_server.server import DocsRequestHandler
+
+        server = HTTPServer(("127.0.0.1", 0), DocsRequestHandler)
+        port = server.server_address[1]
+        t = threading.Thread(target=server.serve_forever, daemon=True)
+        t.start()
+
+        try:
+            # 1. Test static index.html GET
+            req = urllib.request.urlopen(f"http://127.0.0.1:{port}/")
+            self.assertEqual(req.status, 200)
+            content = req.read().decode("utf-8")
+            self.assertIn("Universal Sentence Refiner", content)
+
+            # 2. Test /api/status GET
+            req_status = urllib.request.urlopen(f"http://127.0.0.1:{port}/api/status")
+            status_data = json.loads(req_status.read().decode("utf-8"))
+            self.assertEqual(status_data["status"], "online")
+
+            # 3. Test /api/refine POST
+            body = json.dumps({"text": "he go to store and buyed fruit", "tone": "standard"}).encode("utf-8")
+            post_req = urllib.request.Request(
+                f"http://127.0.0.1:{port}/api/refine",
+                data=body,
+                headers={"Content-Type": "application/json"},
+            )
+            resp = urllib.request.urlopen(post_req)
+            ref_data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(ref_data["refined"], "He goes to store and bought fruit.")
+        finally:
+            server.shutdown()
+            server.server_close()
+
 
 if __name__ == "__main__":
     unittest.main()
+

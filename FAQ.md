@@ -27,3 +27,9 @@ A: Three performance engineering pillars:
 ### Q: Can I install and run this without `sudo` privileges?
 A: **Yes!** Run `bash packaging/install_user.sh`. It installs binaries to `~/.local/bin` and activates a user-level systemd service (`systemctl --user status refine-daemon.service`) with zero root privileges required.
 
+### Q: How do I open and use the web documentation portal (`index.html`)?
+A: You can view it in two ways:
+1. **Locally via Web Server**: Run `python3 main.py --serve` and open `http://localhost:8080`. This connects live to your resident daemon in RAM.
+2. **Direct Browser File**: Simply double-click `index.html` or open `file:///.../index.html` in Chrome/Firefox. It runs with an embedded client-side fallback rule engine with zero server dependencies!
+
+

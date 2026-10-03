@@ -21,6 +21,9 @@ cp -r "${PROJECT_DIR}/clipboard" "${APP_DIR}/"
 cp -r "${PROJECT_DIR}/injector" "${APP_DIR}/"
 cp -r "${PROJECT_DIR}/ui" "${APP_DIR}/"
 cp -r "${PROJECT_DIR}/daemon" "${APP_DIR}/"
+cp -r "${PROJECT_DIR}/web" "${APP_DIR}/"
+cp -r "${PROJECT_DIR}/web_server" "${APP_DIR}/"
+cp "${PROJECT_DIR}/index.html" "${APP_DIR}/"
 cp "${PROJECT_DIR}/main.py" "${APP_DIR}/"
 
 # Clean pycache

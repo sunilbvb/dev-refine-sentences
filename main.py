@@ -88,8 +88,22 @@ def main() -> None:
         action="store_true",
         help="Run as a persistent resident background daemon in RAM for sub-5ms latency.",
     )
+    parser.add_argument(
+        "--serve",
+        nargs="?",
+        const=8080,
+        type=int,
+        metavar="PORT",
+        help="Serve developer documentation & interactive web portal locally (default port: 8080).",
+    )
 
     args = parser.parse_args()
+
+    # Handle web server startup
+    if args.serve is not None:
+        from web_server import run_docs_server
+        run_docs_server(port=args.serve)
+        return
 
     # Handle daemon mode startup
     if args.daemon:

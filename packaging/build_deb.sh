@@ -42,6 +42,9 @@ cp -r "${PROJECT_DIR}/clipboard" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp -r "${PROJECT_DIR}/injector" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp -r "${PROJECT_DIR}/ui" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp -r "${PROJECT_DIR}/daemon" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp -r "${PROJECT_DIR}/web" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp -r "${PROJECT_DIR}/web_server" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp "${PROJECT_DIR}/index.html" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 cp "${PROJECT_DIR}/main.py" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
 
 # Clean any pycache in build package
