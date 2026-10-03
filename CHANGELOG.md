@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Connects web `/api/refine` requests directly to resident daemon socket in RAM.
 - **Modular Frontend Architecture (`web/`)**:
   - Structured domain modules: `web/js/modules/diff.js`, `metrics.js`, `rules_engine.js`, `api_client.js`, `tabs.js`, and `app.js`.
+- **1-Click Service Management Scripts**:
+  - `start.sh`, `stop.sh`, `restart.sh`, `status.sh` (plus `.start.sh`, `.stop.sh`, etc. aliases) to manage daemon and web portal with single commands.
 
 ## [1.1.0] - 2026-10-03
 

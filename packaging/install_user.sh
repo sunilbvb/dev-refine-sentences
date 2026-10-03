@@ -48,9 +48,13 @@ exec "${HOME}/.local/share/refine-sentences/launch_portal.sh" "$@"
 EOF
 chmod +x "${BIN_DIR}/refine-portal"
 
-# Copy 1-click launcher script to app dir
+# Copy 1-click management scripts to app dir
 cp "${PROJECT_DIR}/launch_portal.sh" "${APP_DIR}/"
-chmod +x "${APP_DIR}/launch_portal.sh"
+cp "${PROJECT_DIR}/start.sh" "${APP_DIR}/"
+cp "${PROJECT_DIR}/stop.sh" "${APP_DIR}/"
+cp "${PROJECT_DIR}/restart.sh" "${APP_DIR}/"
+cp "${PROJECT_DIR}/status.sh" "${APP_DIR}/"
+chmod +x "${APP_DIR}/"*.sh
 
 # Install .desktop application launcher
 mkdir -p "${HOME}/.local/share/applications"

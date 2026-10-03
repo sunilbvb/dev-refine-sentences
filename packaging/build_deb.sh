@@ -82,7 +82,11 @@ EOF
 
 cp "${PROJECT_DIR}/packaging/refine-portal.desktop" "${PKG_ROOT}/usr/share/applications/refine-portal.desktop"
 cp "${PROJECT_DIR}/launch_portal.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
-chmod +x "${PKG_ROOT}/usr/share/${PKG_NAME}/launch_portal.sh"
+cp "${PROJECT_DIR}/start.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp "${PROJECT_DIR}/stop.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp "${PROJECT_DIR}/restart.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+cp "${PROJECT_DIR}/status.sh" "${PKG_ROOT}/usr/share/${PKG_NAME}/"
+chmod +x "${PKG_ROOT}/usr/share/${PKG_NAME}/"*.sh
 
 # 5. Install systemd user services
 mkdir -p "${PKG_ROOT}/usr/lib/systemd/user"

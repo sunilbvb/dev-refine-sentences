@@ -27,13 +27,12 @@ class DocsRequestHandler(http.server.SimpleHTTPRequestHandler):
             daemon_active = False
             if SOCKET_PATH.exists():
                 try:
-                    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                    s.settimeout(0.2)
-                    s.connect(str(SOCKET_PATH))
-                    s.sendall(json.dumps({"mode": "ping"}).encode("utf-8"))
-                    resp = s.recv(1024)
-                    s.close()
-                    daemon_active = resp.strip() == b"PONG"
+                    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                        s.settimeout(0.2)
+                        s.connect(str(SOCKET_PATH))
+                        s.sendall(json.dumps({"mode": "ping"}).encode("utf-8"))
+                        resp = s.recv(1024)
+                        daemon_active = resp.strip() == b"PONG"
                 except Exception:
                     daemon_active = False
 

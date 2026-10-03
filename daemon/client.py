@@ -18,16 +18,15 @@ def send_daemon_request(mode: str = "popup", tone: str = "standard", paste: bool
         return False
 
     try:
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.settimeout(0.5)
-        sock.connect(str(SOCKET_PATH))
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.5)
+            sock.connect(str(SOCKET_PATH))
 
-        payload = json.dumps({"mode": mode, "tone": tone, "paste": paste})
-        sock.sendall(payload.encode("utf-8"))
+            payload = json.dumps({"mode": mode, "tone": tone, "paste": paste})
+            sock.sendall(payload.encode("utf-8"))
 
-        resp = sock.recv(1024)
-        sock.close()
-        return resp.strip() == b"OK"
+            resp = sock.recv(1024)
+            return resp.strip() == b"OK"
     except Exception:
         return False
 
@@ -42,18 +41,17 @@ def query_daemon_refine(text: str, tone: str = "standard") -> dict | None:
         return None
 
     try:
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.settimeout(1.0)
-        sock.connect(str(SOCKET_PATH))
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            sock.settimeout(1.0)
+            sock.connect(str(SOCKET_PATH))
 
-        payload = json.dumps({"mode": "refine", "text": text, "tone": tone})
-        sock.sendall(payload.encode("utf-8"))
+            payload = json.dumps({"mode": "refine", "text": text, "tone": tone})
+            sock.sendall(payload.encode("utf-8"))
 
-        resp = sock.recv(65536)
-        sock.close()
-        if not resp:
-            return None
-        return json.loads(resp.decode("utf-8"))
+            resp = sock.recv(65536)
+            if not resp:
+                return None
+            return json.loads(resp.decode("utf-8"))
     except Exception:
         return None
 

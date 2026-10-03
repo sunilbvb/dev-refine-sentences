@@ -119,6 +119,11 @@ dev-refine-sentences/
 │   └── test_all.py               # Comprehensive unit tests (20 tests)
 ├── index.html                    # Interactive web portal & developer documentation hub
 ├── main.py                       # CLI orchestrator & entry point
+├── start.sh                      # 1-Click start (resident daemon + web portal)
+├── stop.sh                       # 1-Click stop all background services
+├── restart.sh                    # 1-Click restart all services cleanly
+├── status.sh                     # Live status checker (ports, socket, daemon)
+├── launch_portal.sh              # 1-Click web portal launcher & browser opener
 ├── refine_trigger.sh             # Shell wrapper for OS global hotkey (Popup modal)
 ├── refine_flash.sh               # Shell wrapper for OS global hotkey (Instant silent replace)
 ├── ARCHITECTURE.md               # Architectural specification & component flow
@@ -132,19 +137,39 @@ dev-refine-sentences/
 
 ---
 
+## 🚀 1-Click Service Management Scripts
+
+Manage the resident daemon and web documentation portal effortlessly with one-command scripts:
+
+```bash
+# Start both daemon and web portal
+./start.sh        # or ./.start.sh
+
+# Check live status (PIDs, RAM, ports, and sockets)
+./status.sh       # or ./.status.sh
+
+# Restart all services cleanly
+./restart.sh      # or ./.restart.sh
+
+# Stop all services
+./stop.sh         # or ./.stop.sh
+```
+
+---
+
 ## 🌐 Interactive Web Portal & Documentation Hub (`index.html`)
 
 Universal Sentence Refiner includes a self-contained developer portal and interactive playground:
 
 1. **Serve locally via Python Standard Library**:
    ```bash
-   python3 main.py --serve 8080
+   ./start.sh
+   # Or directly: python3 main.py --serve 8080
    ```
    Open [http://localhost:8080](http://localhost:8080) to interact with live sentence refinement connected to your resident daemon in RAM!
 
 2. **Standalone Browser Mode**:
    You can also double-click `index.html` or open `file:///.../index.html` directly in any web browser without running any web server—it includes an embedded JavaScript fallback rule engine for 100% offline testing.
-```
 
 ---
 
