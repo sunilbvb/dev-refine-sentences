@@ -14,6 +14,7 @@ class KeyInjector:
         self.wtype = shutil.which("wtype")
         self.xdotool = shutil.which("xdotool")
         self.notify_send = shutil.which("notify-send")
+        self.canberra = shutil.which("canberra-gtk-play")
         self.has_atspi = self._check_atspi()
 
     def _check_atspi(self) -> bool:
@@ -25,6 +26,14 @@ class KeyInjector:
             return hasattr(Atspi, "generate_keyboard_event")
         except Exception:
             return False
+
+    def play_sound(self, sound_id: str = "message-new-instant") -> None:
+        """Play subtle sensory confirmation sound."""
+        if self.canberra:
+            try:
+                subprocess.Popen([self.canberra, "-i", sound_id], stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
 
     def notify(self, title: str, message: str) -> None:
         """Send desktop notification via notify-send."""

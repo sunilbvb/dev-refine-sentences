@@ -185,6 +185,7 @@ def main() -> None:
         pasted = False
         if args.paste:
             pasted = injector.simulate_paste()
+            injector.play_sound("complete")
 
         if pasted:
             injector.notify("Sentence Refiner", f"Refined & Pasted ({args.tone}): {refined_text[:40]}...")
@@ -231,6 +232,7 @@ def main() -> None:
         pasted = False
         if args.paste:
             pasted = injector.simulate_paste()
+            injector.play_sound("complete")
         if not pasted:
             injector.notify("Sentence Refiner", "Refined sentence ready in clipboard! Press Ctrl+V.")
 

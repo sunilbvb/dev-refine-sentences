@@ -135,12 +135,12 @@ class RefinePopup:
         tone_buttons: Dict[str, tk.Button] = {}
 
         tones = [
-            ("Standard", "standard"),
-            ("Concise", "concise"),
-            ("Professional", "professional"),
-            ("Friendly", "friendly"),
-            ("Bullets", "bullet_points"),
-            ("Email", "email_formal"),
+            ("[1] Standard", "standard"),
+            ("[2] Concise", "concise"),
+            ("[3] Pro", "professional"),
+            ("[4] Friendly", "friendly"),
+            ("[5] Bullets", "bullet_points"),
+            ("[6] Email", "email_formal"),
         ]
 
         def update_metrics_display():
@@ -381,7 +381,7 @@ class RefinePopup:
 
         hint_label = tk.Label(
             actions_frame,
-            text="[Enter] Apply & Copy    [Esc] Cancel    [Alt+D] Toggle Diff",
+            text="[1-6] Tones   [Enter/y] Replace   [Esc/n] Dismiss   [Alt+D] Diff",
             font=("Sans", 8),
             fg="#6C7086",
             bg="#1E1E2E",
@@ -401,13 +401,13 @@ class RefinePopup:
 
         cancel_btn = tk.Button(
             actions_frame,
-            text="Cancel",
-            font=("Sans", 10),
+            text="Dismiss (Esc/n)",
+            font=("Sans", 9),
             bg="#45475A",
             fg="#CDD6F4",
             relief=tk.FLAT,
             bd=0,
-            padx=14,
+            padx=12,
             pady=6,
             cursor="hand2",
             command=cancel_action,
@@ -416,34 +416,70 @@ class RefinePopup:
 
         apply_btn = tk.Button(
             actions_frame,
-            text="Apply & Copy",
-            font=("Sans", 10, "bold"),
+            text="Replace & Paste (Enter/y)",
+            font=("Sans", 9, "bold"),
             bg="#A6E3A1",
             fg="#11111B",
             relief=tk.FLAT,
             bd=0,
-            padx=16,
+            padx=14,
             pady=6,
             cursor="hand2",
             command=apply_action,
         )
         apply_btn.pack(side=tk.RIGHT)
 
+        # Single key shortcuts when not in direct text editing
+        def handle_key(event):
+            if self.view_mode == "diff" or root.focus_get() != output_box:
+                k = event.char
+                if k == "1":
+                    set_tone("standard")
+                elif k == "2":
+                    set_tone("concise")
+                elif k == "3":
+                    set_tone("professional")
+                elif k == "4":
+                    set_tone("friendly")
+                elif k == "5":
+                    set_tone("bullet_points")
+                elif k == "6":
+                    set_tone("email_formal")
+                elif k in ("y", "Y"):
+                    apply_action()
+                elif k in ("n", "N"):
+                    cancel_action()
+
         root.bind("<Return>", lambda e: apply_action())
         root.bind("<Escape>", lambda e: cancel_action())
         root.bind("<Alt-d>", lambda e: toggle_view())
+        root.bind("<Key>", handle_key)
 
         # Initial Render
         render_preview()
         update_metrics_display()
         update_teach_display()
 
-        # Center on screen
+        # Smart Float-at-Cursor Positioning (near highlighted text)
         root.update_idletasks()
         w = root.winfo_width()
         h = root.winfo_height()
-        x = (root.winfo_screenwidth() // 2) - (w // 2)
-        y = (root.winfo_screenheight() // 2) - (h // 2)
+        screen_w = root.winfo_screenwidth()
+        screen_h = root.winfo_screenheight()
+
+        ptr_x, ptr_y = root.winfo_pointerxy()
+        if ptr_x > 0 or ptr_y > 0:
+            # Place window centered horizontally near pointer, constrained by screen
+            x = max(10, min(ptr_x - (w // 2), screen_w - w - 10))
+            # Place window slightly below pointer; if overflowing bottom, place above
+            if ptr_y + h + 30 < screen_h:
+                y = ptr_y + 20
+            else:
+                y = max(10, ptr_y - h - 20)
+        else:
+            x = (screen_w // 2) - (w // 2)
+            y = (screen_h // 2) - (h // 2)
+
         root.geometry(f"+{x}+{y}")
 
         root.mainloop()

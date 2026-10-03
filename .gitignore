@@ -28,3 +28,7 @@ htmlcov/
 
 # Logs
 *.log
+
+# Distribution / packaging
+build/
+dist/

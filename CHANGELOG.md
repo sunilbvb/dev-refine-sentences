@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-10-03
+
+### Added
+- **Smart Float-at-Cursor Positioning**:
+  - Modal automatically aligns with mouse pointer coordinates (`winfo_pointerxy`), appearing right next to highlighted text (Raycast / PopClip style).
+- **Single-Key Lightning Navigation**:
+  - `1`-`6` for instantaneous tone switching.
+  - `y` / `Enter` to apply and replace in-place.
+  - `n` / `Esc` to dismiss.
+- **Sensory Sound Confirmation**:
+  - Added subtle audio chime (`canberra-gtk-play`) on in-place replacement.
+- **Debian Packaging**:
+  - Added `packaging/build_deb.sh` script generating standalone `.deb` package (`dist/refine-sentences_1.0.0_all.deb`).
+
 ## [1.0.0] - 2026-10-03
 
 ### Added

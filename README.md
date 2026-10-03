@@ -9,44 +9,45 @@ Built with **100% Python Standard Library** (zero third-party pip dependencies).
 ## 🌟 Key Features
 
 1. **Universal Input Field Support (Browser, Antigravity, Claude, ChatGPT, etc.)**:
-   - Highlight text anywhere with your mouse or keyboard (`Shift + Arrows`).
-   - Automatically captures highlighted text using Linux `PRIMARY` selection and native GNOME `Atspi` event hooks.
+   - Highlight text anywhere with mouse drag or `Shift + Arrows`.
+   - Automatically captures highlighted text using Linux `PRIMARY` selection and native GNOME `Atspi` accessibility.
    - **Zero manual copying required**!
-2. **Immediate Refinement & In-Place Text Replacement**:
-   - Press the global shortcut (`Ctrl + Alt + R`).
-   - The tool immediately captures the highlighted text, runs refinement, and opens the suggestion modal.
-   - Press **Enter** (or click **Apply & Copy**): the tool automatically pastes (`Ctrl+V`) the refined text over your selection in the active input box!
-3. **Visual Word-by-Word Diff (Like Google Chat)**:
+2. **Smart Float-at-Cursor Positioning (Raycast/PopClip style)**:
+   - The popup dynamically detects your mouse pointer coordinates (`winfo_pointerxy`) and positions the refinement pill **right next to the highlighted text**.
+3. **Single-Key Lightning Navigation (Vim/Power-User friendly)**:
+   - `1` = Standard Tone
+   - `2` = Concise Tone
+   - `3` = Professional Tone
+   - `4` = Friendly Tone
+   - `5` = Bullet Points
+   - `6` = Email Formal
+   - `y` or `Enter` = Apply & Replace
+   - `n` or `Esc` = Dismiss
+   - `Alt + D` = Toggle Visual Diff / Direct Editor
+4. **Sensory Sound Confirmation**:
+   - Plays a subtle Linux system audio chime (`canberra-gtk-play`) upon successful in-place replacement.
+5. **Visual Word-by-Word Diff (Like Google Chat)**:
    - Floating popup highlights exact modified words: <span style="color:#F38BA8">red strikethrough</span> for deletions, <span style="color:#A6E3A1">green bold</span> for corrections.
-   - Toggle seamlessly between **Diff View** and **Direct Editor** (`Alt+D`).
-4. **Teach Mode ("Why Changed?")**:
+6. **Teach Mode ("Why Changed?")**:
    - Explains the exact grammatical rules, typos, and style improvements made (e.g. *"Grammar: Subject-verb agreement: third-person singular uses 'goes'"* or *"Conciseness: Removed filler word 'basically'"*).
-5. **Linguistic & Readability Metrics**:
+7. **Linguistic & Readability Metrics**:
    - Live **Flesch Reading Ease** score (e.g. *85.2 - Very Easy*), **Flesch-Kincaid Grade Level**, word counts, and estimated reading time.
-6. **Interactive GUI Settings Dialog**:
+8. **Interactive GUI Settings Dialog**:
    - Click `[⚙️ Settings]` directly inside the popup to add/edit API keys, whitelist terms, and snippets with zero terminal commands needed.
-7. **Dynamic Snippet Template Variables (Espanso-style)**:
+9. **Dynamic Snippet Template Variables (Espanso-style)**:
    - Snippets support live variables: `{{date}}`, `{{time}}`, `{{year}}`, `{{day}}`. (e.g. `meet` → *"Meeting on {{day}} at {{time}}"*).
-8. **One-Key Instant Flash Mode (`refine_flash.sh`)**:
-   - Bypass all dialogs for ultra-fast, 50ms in-place replacement.
-9. **Pluggable Engine Architecture (Offline & Cloud AI)**:
-   - **Built-in Rule Engine** (Default, 100% offline, zero config, instant).
-   - **Google Gemini API** (`gemini-1.5-flash`, `gemini-1.5-pro` via stdlib `urllib`).
-   - **OpenAI / ChatGPT API** (`gpt-4o-mini`, `gpt-4o` via stdlib `urllib`).
-   - **Anthropic Claude API** (`claude-3-5-haiku`, `claude-3-5-sonnet` via stdlib `urllib`).
-   - **Local Ollama Connector** (Offline local models like `qwen2.5:0.5b`).
-   - **Local LanguageTool Server** (Offline rule server).
-   - **Live Engine Switcher**: Switch engines directly inside the GUI popup!
-10. **Multi-Tone Expansion**:
-    - **Standard**: Polishes grammar, typos, capitalization, and punctuation.
-    - **Concise**: Eliminates fluff, filler words, and awkward redundancies.
-    - **Professional**: Converts informal slang and contractions into formal phrasing.
-    - **Friendly**: Warms tone and softens imperative orders.
-    - **Bullets**: Reorganizes clauses into clean markdown bullet points (`- ...`).
-    - **Email**: Auto-wraps sentence with professional greeting and sign-off.
-11. **Refinement History & Undo Buffer**:
-    - Automatically saves past refinements to `~/.config/refine_tool/history.json`.
-    - Restore past snippets right from the popup dropdown or via `--history`.
+10. **One-Key Instant Flash Mode (`refine_flash.sh`)**:
+    - Bypass all dialogs for ultra-fast, 50ms in-place replacement.
+11. **Single-Click Debian Package (`.deb`) Builder**:
+    - Build standalone installable `.deb` packages with `./packaging/build_deb.sh`.
+12. **Pluggable Engine Architecture (Offline & Cloud AI)**:
+    - **Built-in Rule Engine** (Default, 100% offline, zero config, instant).
+    - **Google Gemini API** (`gemini-1.5-flash`, `gemini-1.5-pro` via stdlib `urllib`).
+    - **OpenAI / ChatGPT API** (`gpt-4o-mini`, `gpt-4o` via stdlib `urllib`).
+    - **Anthropic Claude API** (`claude-3-5-haiku`, `claude-3-5-sonnet` via stdlib `urllib`).
+    - **Local Ollama Connector** (Offline local models like `qwen2.5:0.5b`).
+    - **Local LanguageTool Server** (Offline rule server).
+    - **Live Engine Switcher**: Switch engines directly inside the GUI popup!
 
 ---
 
@@ -76,14 +77,16 @@ dev-refine-sentences/
 ├── clipboard/                    # Domain sub-package: Clipboard management
 │   ├── __init__.py               # Package exports
 │   └── manager.py                # Primary selection & Wayland/X11 clipboard wrapper
-├── injector/                     # Domain sub-package: OS keystrokes & alerts
+├── injector/                     # Domain sub-package: OS keystrokes, audio & alerts
 │   ├── __init__.py               # Package exports
-│   └── injector.py               # Atspi Wayland key event injection & notify-send handler
+│   └── injector.py               # Atspi Wayland key event injection, sound chime & notify-send
 ├── ui/                           # Domain sub-package: User Interface
 │   ├── __init__.py               # Package exports
 │   ├── diff_highlighter.py       # Stdlib difflib word-level diff tokenizer
 │   ├── settings_dialog.py        # Tkinter Settings modal (API keys, whitelist, snippets)
-│   └── popup.py                  # Tkinter floating preview modal with visual diff & teach mode
+│   └── popup.py                  # Tkinter floating preview modal with float-at-cursor & hotkeys
+├── packaging/                    # Distribution & packaging
+│   └── build_deb.sh              # Standalone .deb installer builder script
 ├── tests/                        # Unit test suite
 │   ├── __init__.py               # Package exports
 │   └── test_all.py               # Comprehensive unit tests (16 tests)
@@ -91,6 +94,11 @@ dev-refine-sentences/
 ├── refine_trigger.sh             # Shell wrapper for OS global hotkey (Popup modal)
 ├── refine_flash.sh               # Shell wrapper for OS global hotkey (Instant silent replace)
 ├── ARCHITECTURE.md               # Architectural specification & component flow
+├── CONTRIBUTING.md               # Contributor guidelines
+├── CODE_OF_CONDUCT.md            # Contributor Covenant standard
+├── SECURITY.md                   # Security & API key policy
+├── CHANGELOG.md                  # Release version history
+├── LICENSE                       # MIT License
 ├── FAQ.md                        # Common questions & troubleshooting
 └── README.md                     # Project documentation
 ```
@@ -112,15 +120,13 @@ Open **Settings** -> **Keyboard** -> **View and Customize Shortcuts** -> **Custo
 
 ---
 
-## 🔄 Universal Workflow in Any Application
+## 📦 Build Standalone Debian Package (`.deb`)
 
-Works identically in **Antigravity IDE**, **Google Chrome**, **Firefox**, **ChatGPT**, **Claude**, **Slack**, or **Terminal**:
+To package for Ubuntu/Debian installation:
+```bash
+./packaging/build_deb.sh
+# Creates: dist/refine-sentences_1.0.0_all.deb
 
-1. **Highlight rough text** in any text input field (using mouse drag or `Shift + Arrow`).
-2. **Press your shortcut** (`Ctrl + Alt + R`).
-3. **Inspect suggestion**:
-   - The tool immediately pops up showing the **Visual Word Diff** (<span style="color:#F38BA8">deleted typos</span>, <span style="color:#A6E3A1">added fixes</span>).
-   - Shows **Teach Mode** explanation (why it was changed).
-   - Shows **Readability score** (e.g. *Very Easy - Grade 1*).
-4. **Hit Enter**:
-   - The window closes and immediately pastes the refined version over your selected text!
+# Install on any Ubuntu / Debian machine:
+sudo dpkg -i dist/refine-sentences_1.0.0_all.deb
+```
