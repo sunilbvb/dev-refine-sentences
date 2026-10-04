@@ -87,6 +87,11 @@ if command -v systemctl &>/dev/null; then
     echo "==> Resident daemon & Web portal services enabled via systemd --user!"
 fi
 
+# Auto-configure GNOME keyboard shortcuts
+if command -v gsettings &>/dev/null; then
+    bash "${APP_DIR}/scripts/setup_shortcuts.sh" || true
+fi
+
 echo "==> Installation complete!"
 echo "    Commands available in ${BIN_DIR}:"
 echo "      - refine-sentences       (Interactive popup)"
