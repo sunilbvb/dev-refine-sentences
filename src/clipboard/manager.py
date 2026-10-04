@@ -15,6 +15,9 @@ class ClipboardManager:
         if local_bin not in os.environ.get("PATH", ""):
             os.environ["PATH"] = f"{local_bin}:{os.environ.get('PATH', '')}"
 
+        self.is_mac = sys.platform == "darwin"
+        self.is_win = sys.platform == "win32"
+        self.has_pb = bool(shutil.which("pbcopy") and shutil.which("pbpaste"))
         self.has_wl = bool(shutil.which("wl-copy") and shutil.which("wl-paste"))
         self.has_xclip = bool(shutil.which("xclip"))
         self.has_xsel = bool(shutil.which("xsel"))
@@ -64,7 +67,16 @@ class ClipboardManager:
 
     def get_text(self) -> str:
         """Retrieve current text content from system clipboard."""
-        # Method 1: Wayland native
+        # Method 1: macOS native (pbpaste)
+        if self.is_mac or self.has_pb:
+            try:
+                res = subprocess.run(["pbpaste"], capture_output=True, text=True, timeout=0.8)
+                if res.returncode == 0:
+                    return res.stdout
+            except Exception:
+                pass
+
+        # Method 2: Wayland native (wl-paste)
         if self.has_wl:
             try:
                 res = subprocess.run(["wl-paste", "--no-newline"], capture_output=True, text=True, timeout=0.8)
@@ -73,7 +85,7 @@ class ClipboardManager:
             except Exception:
                 pass
 
-        # Method 2: xclip
+        # Method 3: xclip (X11)
         if self.has_xclip:
             try:
                 res = subprocess.run(["xclip", "-selection", "clipboard", "-o"], capture_output=True, text=True, timeout=0.8)
@@ -82,7 +94,7 @@ class ClipboardManager:
             except Exception:
                 pass
 
-        # Method 3: xsel
+        # Method 4: xsel
         if self.has_xsel:
             try:
                 res = subprocess.run(["xsel", "--clipboard", "--output"], capture_output=True, text=True, timeout=0.8)
@@ -91,7 +103,16 @@ class ClipboardManager:
             except Exception:
                 pass
 
-        # Method 4: Stdlib Tkinter fallback with 0.25s timeout to prevent Wayland hangs
+        # Method 5: Windows PowerShell fallback
+        if self.is_win:
+            try:
+                res = subprocess.run(["powershell", "-NoProfile", "-Command", "Get-Clipboard"], capture_output=True, text=True, timeout=1.0)
+                if res.returncode == 0:
+                    return res.stdout
+            except Exception:
+                pass
+
+        # Method 6: Stdlib Tkinter fallback with 0.25s timeout
         def _read_tk_clip():
             try:
                 import tkinter as tk
@@ -122,20 +143,29 @@ class ClipboardManager:
         """Write text to system clipboard (and primary selection)."""
         success = False
 
-        # Method 1: Wayland native (wl-copy)
+        # Method 1: macOS native (pbcopy)
+        if self.is_mac or self.has_pb:
+            try:
+                p = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE, text=True)
+                p.communicate(input=text, timeout=0.8)
+                if p.returncode == 0:
+                    success = True
+            except Exception:
+                pass
+
+        # Method 2: Wayland native (wl-copy)
         if self.has_wl:
             try:
                 p1 = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE, text=True)
                 p1.communicate(input=text, timeout=0.8)
                 if p1.returncode == 0:
                     success = True
-                # Also mirror into primary selection buffer
                 p2 = subprocess.Popen(["wl-copy", "--primary"], stdin=subprocess.PIPE, text=True)
                 p2.communicate(input=text, timeout=0.8)
             except Exception:
                 pass
 
-        # Method 2: xclip (X11)
+        # Method 3: xclip (X11)
         if self.has_xclip:
             try:
                 p1 = subprocess.Popen(["xclip", "-selection", "clipboard"], stdin=subprocess.PIPE, text=True)
@@ -147,7 +177,17 @@ class ClipboardManager:
             except Exception:
                 pass
 
-        # Method 3: Ephemeral subprocess Tkinter fallback (never leaves dangling X11 selection in daemon)
+        # Method 4: Windows clip.exe or PowerShell
+        if self.is_win and not success:
+            try:
+                p = subprocess.Popen(["clip"], stdin=subprocess.PIPE, text=True)
+                p.communicate(input=text, timeout=0.8)
+                if p.returncode == 0:
+                    success = True
+            except Exception:
+                pass
+
+        # Method 5: Ephemeral subprocess Tkinter fallback
         if not success:
             try:
                 subprocess.run(

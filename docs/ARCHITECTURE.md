@@ -141,6 +141,10 @@ flowchart TD
 - [`restart.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/restart.sh): Restart services.
 - [`status.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/status.sh): Probe live health of daemon & web portal.
 - [`launch_portal.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/launch_portal.sh): Open portal in browser.
+- [`setup_shortcuts.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/setup_shortcuts.sh): Linux GNOME shortcut registrar.
+- [`setup_shortcuts_mac.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/setup_shortcuts_mac.sh): macOS Quick Actions & Services registrar.
+- [`setup_shortcuts_win.bat`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/setup_shortcuts_win.bat): Windows desktop global hotkey generator.
+- [`refine_shortcuts.ahk`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/refine_shortcuts.ahk): Optional AutoHotkey script for Windows.
 - [`refine_trigger.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/refine_trigger.sh): Hook for desktop popup shortcut.
 - [`refine_flash.sh`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/scripts/refine_flash.sh): Hook for desktop flash replace shortcut.
 
@@ -161,6 +165,6 @@ flowchart TD
   - `js/app.js`: Main frontend orchestrator.
 
 ### `tests/`
-- [`test_all.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/tests/test_all.py): Unit test suite covering all domains, web server endpoints, and daemon functionality (20 passing tests).
+- [`test_all.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/tests/test_all.py): Unit test suite covering all domains, web server endpoints, and daemon functionality (21 passing tests).
 
 

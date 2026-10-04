@@ -1,5 +1,4 @@
-"""Input injection and desktop notification utility using Atspi, ydotool, wtype, or xdotool."""
-
+import sys
 import shutil
 import subprocess
 import time
@@ -7,9 +6,14 @@ from typing import Optional
 
 
 class KeyInjector:
-    """Simulates keystrokes via native Linux Atspi accessibility or CLI tools."""
+    """Simulates keystrokes via native macOS (osascript), Windows (PowerShell), or Linux (Atspi/tools)."""
 
     def __init__(self):
+        self.is_mac = sys.platform == "darwin"
+        self.is_win = sys.platform == "win32"
+        self.osascript = shutil.which("osascript")
+        self.afplay = shutil.which("afplay")
+        self.powershell = shutil.which("powershell")
         self.ydotool = shutil.which("ydotool")
         self.wtype = shutil.which("wtype")
         self.xdotool = shutil.which("xdotool")
@@ -19,6 +23,8 @@ class KeyInjector:
 
     def _check_atspi(self) -> bool:
         """Check if GNOME Atspi accessibility keyboard generator is available."""
+        if self.is_mac or self.is_win:
+            return False
         try:
             import gi
             gi.require_version("Atspi", "2.0")
@@ -29,6 +35,19 @@ class KeyInjector:
 
     def play_sound(self, sound_id: str = "message-new-instant") -> None:
         """Play subtle sensory confirmation sound."""
+        if self.is_mac and self.afplay:
+            try:
+                subprocess.Popen([self.afplay, "/System/Library/Sounds/Tink.aiff"], stderr=subprocess.DEVNULL)
+                return
+            except Exception:
+                pass
+        if self.is_win:
+            try:
+                import winsound
+                winsound.MessageBeep(winsound.MB_OK)
+                return
+            except Exception:
+                pass
         if self.canberra:
             try:
                 subprocess.Popen([self.canberra, "-i", sound_id], stderr=subprocess.DEVNULL)
@@ -36,7 +55,35 @@ class KeyInjector:
                 pass
 
     def notify(self, title: str, message: str) -> None:
-        """Send transient desktop notification via notify-send."""
+        """Send transient desktop notification."""
+        clean_msg = message.replace('"', '\\"')
+        clean_title = title.replace('"', '\\"')
+        if self.is_mac and self.osascript:
+            try:
+                subprocess.Popen(
+                    ["osascript", "-e", f'display notification "{clean_msg}" with title "{clean_title}"'],
+                    stderr=subprocess.DEVNULL,
+                )
+                return
+            except Exception:
+                pass
+        if self.is_win and self.powershell:
+            try:
+                cmd = (
+                    f'[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null; '
+                    f'$n = New-Object System.Windows.Forms.NotifyIcon; '
+                    f'$n.Icon = [System.Drawing.SystemIcons]::Information; '
+                    f'$n.Visible = $true; '
+                    f'$n.ShowBalloonTip(2000, "{clean_title}", "{clean_msg}", [System.Windows.Forms.ToolTipIcon]::Info); '
+                    f'Start-Sleep -s 3; $n.Dispose()'
+                )
+                subprocess.Popen(
+                    ["powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command", cmd],
+                    stderr=subprocess.DEVNULL,
+                )
+                return
+            except Exception:
+                pass
         if self.notify_send:
             try:
                 subprocess.Popen(
@@ -62,7 +109,38 @@ class KeyInjector:
         return fallback_codes
 
     def simulate_copy(self) -> bool:
-        """Simulate Ctrl+C to copy selected text in any focused application."""
+        """Simulate copy (Cmd+C on macOS, Ctrl+C on Linux/Windows) to copy selected text."""
+        # Method 0: macOS native via osascript (Cmd+C)
+        if self.is_mac or self.osascript:
+            try:
+                subprocess.run(
+                    ["osascript", "-e", 'tell application "System Events" to keystroke "c" using command down'],
+                    check=False,
+                    timeout=0.8,
+                )
+                time.sleep(0.08)
+                return True
+            except Exception:
+                pass
+
+        # Method 0.5: Windows native via PowerShell (Ctrl+C)
+        if self.is_win and self.powershell:
+            try:
+                subprocess.run(
+                    [
+                        "powershell",
+                        "-NoProfile",
+                        "-Command",
+                        "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('^c')",
+                    ],
+                    check=False,
+                    timeout=1.0,
+                )
+                time.sleep(0.08)
+                return True
+            except Exception:
+                pass
+
         # Method 1: Atspi native (Wayland GNOME)
         if self.has_atspi:
             try:
@@ -114,9 +192,38 @@ class KeyInjector:
         return False
 
     def simulate_paste(self) -> bool:
-        """Simulate Ctrl+V to paste refined text over selected text in any focused field."""
+        """Simulate paste (Cmd+V on macOS, Ctrl+V on Linux/Windows) to replace selected text."""
         # Wait small moment for user to lift fingers off hotkey combo
         time.sleep(0.15)
+
+        # Method 0: macOS native via osascript (Cmd+V)
+        if self.is_mac or self.osascript:
+            try:
+                subprocess.run(
+                    ["osascript", "-e", 'tell application "System Events" to keystroke "v" using command down'],
+                    check=False,
+                    timeout=0.8,
+                )
+                return True
+            except Exception:
+                pass
+
+        # Method 0.5: Windows native via PowerShell (Ctrl+V)
+        if self.is_win and self.powershell:
+            try:
+                subprocess.run(
+                    [
+                        "powershell",
+                        "-NoProfile",
+                        "-Command",
+                        "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait('^v')",
+                    ],
+                    check=False,
+                    timeout=1.0,
+                )
+                return True
+            except Exception:
+                pass
 
         # Method 1: Atspi native (Wayland GNOME)
         if self.has_atspi:

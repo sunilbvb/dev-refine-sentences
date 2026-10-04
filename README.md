@@ -162,18 +162,42 @@ When running, any hotkey press connects instantly to the resident daemon in RAM!
 
 ---
 
-## ⌨️ Setup Hotkeys in Ubuntu GNOME (Wayland)
+---
 
-Open **Settings** -> **Keyboard** -> **View and Customize Shortcuts** -> **Custom Shortcuts**:
+## ⌨️ 1-Click Global Shortcut Setup (Cross-Platform)
 
-1. **Refine Sentence (Suggestion Preview + Replace)**:
-   * **Name**: `Refine Sentence`
-   * **Command**: `/home/sunil-bakale/IdeaProjects/dev-refine-sentences/refine_trigger.sh`
-   * **Shortcut**: `Ctrl + Alt + R`
-2. **Instant Silent Flash Mode (Zero Dialog In-Place Replace)**:
-   * **Name**: `Refine Sentence Flash`
-   * **Command**: `/home/sunil-bakale/IdeaProjects/dev-refine-sentences/refine_flash.sh`
-   * **Shortcut**: `Super + Shift + R`
+Sentence Refiner works seamlessly across **Linux**, **macOS**, and **Windows** with 100% standard library tools (zero third-party dependencies):
+
+### 🐧 Linux (Ubuntu GNOME / Wayland & X11)
+Run the automated shortcut registrar:
+```bash
+bash scripts/setup_shortcuts.sh
+```
+* `[Ctrl + Alt + R]` ➔ Floating Preview Modal with Visual Diff
+* `[Super + Shift + R]` ➔ Instant Silent Replace (2ms Flash)
+
+---
+
+### 🍏 macOS (MacBook, iMac, Mac Studio)
+Run the automated Quick Actions setup:
+```bash
+bash scripts/setup_shortcuts_mac.sh
+```
+* Creates native macOS Services: `Refine Sentence (Popup)` and `Refine Sentence (Flash)`.
+* Assign keys in **System Settings** ➔ **Keyboard** ➔ **Keyboard Shortcuts** ➔ **Services** (e.g. `⌘⇧R` / `Cmd+Shift+R`).
+* Uses native `pbcopy`, `pbpaste`, and `osascript` keystroke injection. Works in Safari, Chrome, Slack, VS Code, Notes, Mail, etc.
+
+---
+
+### 🪟 Windows (Windows 10 & 11)
+Double-click `scripts\setup_shortcuts_win.bat`:
+```cmd
+scripts\setup_shortcuts_win.bat
+```
+* Generates native Windows desktop shortcut hooks with global hotkeys:
+  * `[Ctrl + Alt + R]` ➔ Floating Preview Modal
+  * `[Ctrl + Shift + R]` ➔ Instant Flash Replace
+* Uses native PowerShell and WScript shell automation. Optional AutoHotkey script is also provided at `scripts/refine_shortcuts.ahk`.
 
 ---
 
@@ -182,8 +206,8 @@ Open **Settings** -> **Keyboard** -> **View and Customize Shortcuts** -> **Custo
 To package for Ubuntu/Debian installation:
 ```bash
 ./packaging/build_deb.sh
-# Creates: dist/refine-sentences_1.0.0_all.deb
+# Creates: dist/refine-sentences_1.2.0_all.deb
 
 # Install on any Ubuntu / Debian machine:
-sudo dpkg -i dist/refine-sentences_1.0.0_all.deb
+sudo dpkg -i dist/refine-sentences_1.2.0_all.deb
 ```
