@@ -43,6 +43,21 @@ class KeyInjector:
             except Exception:
                 pass
 
+    def _get_keycodes(self, keysym: int, fallback_codes: list) -> list:
+        """Resolve hardware keycodes for a given keysym using Gdk if available, else fallback."""
+        try:
+            import gi
+            gi.require_version("Gtk", "3.0")
+            gi.require_version("Gdk", "3.0")
+            from gi.repository import Gdk
+            keymap = Gdk.Keymap.get_default()
+            success, entries = keymap.get_entries_for_keyval(keysym)
+            if success and entries:
+                return [e.keycode for e in entries]
+        except Exception:
+            pass
+        return fallback_codes
+
     def simulate_copy(self) -> bool:
         """Simulate Ctrl+C to copy selected text in any focused application."""
         # Method 1: Atspi native (Wayland GNOME)
@@ -51,10 +66,21 @@ class KeyInjector:
                 import gi
                 gi.require_version("Atspi", "2.0")
                 from gi.repository import Atspi
-                Atspi.generate_keyboard_event(65507, None, Atspi.KeySynthType.PRESS)
-                Atspi.generate_keyboard_event(99, "c", Atspi.KeySynthType.PRESSRELEASE)
-                Atspi.generate_keyboard_event(65507, None, Atspi.KeySynthType.RELEASE)
-                time.sleep(0.08)
+                # Release modifier keys in case user is still physically holding them
+                for mod in [133, 50, 62, 64, 108]:
+                    Atspi.generate_keyboard_event(mod, None, Atspi.KeySynthType.RELEASE)
+                time.sleep(0.04)
+
+                ctrl_codes = self._get_keycodes(0xffe3, [37])
+                c_codes = self._get_keycodes(0x63, [54])
+                ctrl_code = ctrl_codes[0] if ctrl_codes else 37
+                c_code = c_codes[0] if c_codes else 54
+
+                Atspi.generate_keyboard_event(ctrl_code, None, Atspi.KeySynthType.PRESS)
+                Atspi.generate_keyboard_event(c_code, None, Atspi.KeySynthType.PRESS)
+                Atspi.generate_keyboard_event(c_code, None, Atspi.KeySynthType.RELEASE)
+                Atspi.generate_keyboard_event(ctrl_code, None, Atspi.KeySynthType.RELEASE)
+                time.sleep(0.10)
                 return True
             except Exception:
                 pass
@@ -90,8 +116,8 @@ class KeyInjector:
 
     def simulate_paste(self) -> bool:
         """Simulate Ctrl+V to paste refined text over selected text in any focused field."""
-        # Wait tiny moment for window focus to return to original input field
-        time.sleep(0.08)
+        # Wait small moment for user to lift fingers off hotkey combo
+        time.sleep(0.12)
 
         # Method 1: Atspi native (Wayland GNOME)
         if self.has_atspi:
@@ -99,9 +125,20 @@ class KeyInjector:
                 import gi
                 gi.require_version("Atspi", "2.0")
                 from gi.repository import Atspi
-                Atspi.generate_keyboard_event(65507, None, Atspi.KeySynthType.PRESS)
-                Atspi.generate_keyboard_event(118, "v", Atspi.KeySynthType.PRESSRELEASE)
-                Atspi.generate_keyboard_event(65507, None, Atspi.KeySynthType.RELEASE)
+                # Release modifier keys (Super, Shift, Alt) so they don't corrupt Ctrl+V
+                for mod in [133, 50, 62, 64, 108]:
+                    Atspi.generate_keyboard_event(mod, None, Atspi.KeySynthType.RELEASE)
+                time.sleep(0.04)
+
+                ctrl_codes = self._get_keycodes(0xffe3, [37])
+                v_codes = self._get_keycodes(0x76, [55])
+                ctrl_code = ctrl_codes[0] if ctrl_codes else 37
+                v_code = v_codes[0] if v_codes else 55
+
+                Atspi.generate_keyboard_event(ctrl_code, None, Atspi.KeySynthType.PRESS)
+                Atspi.generate_keyboard_event(v_code, None, Atspi.KeySynthType.PRESS)
+                Atspi.generate_keyboard_event(v_code, None, Atspi.KeySynthType.RELEASE)
+                Atspi.generate_keyboard_event(ctrl_code, None, Atspi.KeySynthType.RELEASE)
                 return True
             except Exception:
                 pass

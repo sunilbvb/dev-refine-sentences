@@ -2,6 +2,7 @@
 
 import shutil
 import subprocess
+import threading
 from typing import Optional
 
 
@@ -33,20 +34,26 @@ class ClipboardManager:
             except Exception:
                 pass
 
-        # Method 3: Tkinter primary selection
-        try:
-            import tkinter as tk
-            root = tk.Tk()
-            root.withdraw()
+        # Method 3: Tkinter primary selection with 0.25s timeout
+        def _read_tk_primary():
             try:
-                txt = root.selection_get(selection="PRIMARY")
+                import tkinter as tk
+                root = tk.Tk()
+                root.withdraw()
+                try:
+                    res_p[0] = root.selection_get(selection="PRIMARY")
+                except Exception:
+                    res_p[0] = ""
+                root.destroy()
             except Exception:
-                txt = ""
-            root.destroy()
-            if txt and txt.strip():
-                return txt
-        except Exception:
-            pass
+                pass
+
+        res_p = [""]
+        th_p = threading.Thread(target=_read_tk_primary, daemon=True)
+        th_p.start()
+        th_p.join(timeout=0.25)
+        if res_p[0] and res_p[0].strip():
+            return res_p[0]
 
         return ""
 
@@ -79,19 +86,25 @@ class ClipboardManager:
             except Exception:
                 pass
 
-        # Method 4: Stdlib Tkinter fallback
-        try:
-            import tkinter as tk
-            root = tk.Tk()
-            root.withdraw()
+        # Method 4: Stdlib Tkinter fallback with 0.25s timeout to prevent Wayland hangs
+        def _read_tk_clip():
             try:
-                text = root.clipboard_get()
+                import tkinter as tk
+                root = tk.Tk()
+                root.withdraw()
+                try:
+                    res_c[0] = root.clipboard_get()
+                except Exception:
+                    res_c[0] = ""
+                root.destroy()
             except Exception:
-                text = ""
-            root.destroy()
-            return text
-        except Exception:
-            return ""
+                pass
+
+        res_c = [""]
+        th_c = threading.Thread(target=_read_tk_clip, daemon=True)
+        th_c.start()
+        th_c.join(timeout=0.25)
+        return res_c[0]
 
     def get_selected_or_clipboard(self) -> str:
         """Get currently highlighted text; if none highlighted, fallback to clipboard."""

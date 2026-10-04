@@ -58,6 +58,8 @@ class RefinePopup:
         root.geometry("640x620")
         root.minsize(560, 520)
         root.attributes("-topmost", True)
+        root.lift()
+        root.focus_force()
         root.configure(bg="#1E1E2E")
 
         # Top Header Frame

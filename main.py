@@ -162,10 +162,10 @@ def main() -> None:
             print(f"   Ref : {e['refined']}\n")
         return
 
-    # Fast-Path: If resident daemon is active in RAM, delegate for sub-5ms latency!
-    if not args.text and args.mode in ["popup", "clipboard"] and args.engine == "auto":
+    # Fast-Path: In flash/clipboard mode, delegate to resident daemon for sub-5ms latency!
+    if not args.text and args.mode == "clipboard" and args.engine == "auto":
         from daemon import send_daemon_request
-        if send_daemon_request(mode=args.mode, tone=args.tone, paste=args.paste):
+        if send_daemon_request(mode="clipboard", tone=args.tone, paste=args.paste):
             return
 
     if args.mode == "cli" and args.engine == "auto" and args.text:
@@ -219,7 +219,7 @@ def main() -> None:
             raw_text = clipboard.get_text()
 
     if not raw_text or not raw_text.strip():
-        injector.notify("Sentence Refiner", "No text highlighted or clipboard is empty!")
+        injector.notify("Sentence Refiner", "Please highlight a sentence first, then press shortcut.")
         return
 
     raw_text = raw_text.strip()

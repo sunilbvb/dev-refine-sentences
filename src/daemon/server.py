@@ -8,6 +8,7 @@ import sys
 import json
 import socket
 import signal
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -103,8 +104,12 @@ class RefineDaemon:
                 client_sock.sendall(b"OK\n")
                 client_sock.close()
 
-                # Process request in-memory
-                self._handle_request(mode, tone, paste)
+                # Process request in-memory asynchronously so socket loop never blocks
+                threading.Thread(
+                    target=self._handle_request,
+                    args=(mode, tone, paste),
+                    daemon=True,
+                ).start()
             except Exception as e:
                 pass
 
@@ -116,7 +121,7 @@ class RefineDaemon:
             raw_text = self.clipboard.get_text()
 
         if not raw_text or not raw_text.strip():
-            self.injector.notify("Sentence Refiner", "No text highlighted or clipboard empty!")
+            self.injector.notify("Sentence Refiner", "Please highlight a sentence first, then press shortcut.")
             return
 
         raw_text = raw_text.strip()
@@ -130,6 +135,9 @@ class RefineDaemon:
             if paste:
                 self.injector.simulate_paste()
                 self.injector.play_sound("complete")
+            summary_orig = (raw_text[:35] + "...") if len(raw_text) > 35 else raw_text
+            summary_ref = (refined[:35] + "...") if len(refined) > 35 else refined
+            self.injector.notify("Sentence Refined ✨", f"\"{summary_orig}\" ➔ \"{summary_ref}\"")
             return
 
         # Popup Mode
