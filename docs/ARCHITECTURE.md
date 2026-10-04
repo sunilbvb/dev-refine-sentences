@@ -101,6 +101,7 @@ flowchart TD
 ### `src/refiner/`
 - [`base.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/refiner/base.py): Abstract `BaseRefiner` interface.
 - [`rules.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/refiner/rules.py): Offline deterministic NLP rules engine with whitelist masking, dynamic snippet expansion (`{{date}}`, `{{time}}`, `{{year}}`), typo resolution, grammar correction, and Teach Mode explanation tracking.
+- [`spelling.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/refiner/spelling.py): Zero-pip offline spelling engine using Peter Norvig's edit-distance candidate ranking + comprehensive developer lexicon.
 - [`gemini.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/refiner/gemini.py): Standard library HTTP client for Google Gemini API.
 - [`openai.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/refiner/openai.py): Standard library HTTP client for OpenAI API.
 - [`claude.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/refiner/claude.py): Standard library HTTP client for Anthropic Claude API.

@@ -179,6 +179,29 @@ class TestSentenceRefiner(unittest.TestCase):
             server.shutdown()
             server.server_close()
 
+    def test_offline_spelling_and_developer_sentence(self):
+        input_text = (
+            "Also please crete a develop branch because I wasn other develoeprs to contribute on this tool "
+            "so would be great if we have the develpo branch updatodate and follwo the git stndard rules."
+        )
+        expected = (
+            "Also, please create a develop branch because I want other developers to contribute to this tool "
+            "so it would be great if we have the develop branch up to date and follow standard Git rules."
+        )
+        res = self.refiner.refine(input_text, tone="standard")
+        self.assertEqual(res, expected)
+
+    def test_spelling_engine_direct(self):
+        from refiner.spelling import SpellingEngine
+        se = SpellingEngine()
+        self.assertEqual(se.correct_word("crete")[0], "create")
+        self.assertEqual(se.correct_word("develoeprs")[0], "developers")
+        self.assertEqual(se.correct_word("follwo")[0], "follow")
+        self.assertEqual(se.correct_word("stndard")[0], "standard")
+        self.assertEqual(se.correct_word("develpo")[0], "develop")
+        # Protected whitelist word
+        self.assertEqual(se.correct_word("Kubernetes", whitelist=["Kubernetes"])[0], "Kubernetes")
+
 
 if __name__ == "__main__":
     unittest.main()

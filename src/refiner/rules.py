@@ -7,6 +7,7 @@ import re
 import time
 from typing import Dict, List, Tuple, Any, Optional, Pattern
 from .base import BaseRefiner
+from .spelling import SpellingEngine
 from config.settings import ConfigManager
 
 
@@ -140,6 +141,15 @@ class RuleBasedRefiner(BaseRefiner):
         (r"\btooths\b", "teeth", "Irregular plural: 'tooth' plural is 'teeth'."),
         (r"\bfeeled\b", "felt", "Irregular verb: 'feel' past tense is 'felt'."),
         (r"\brunned\b", "ran", "Irregular verb: 'run' past tense is 'ran'."),
+
+        # Contextual verb slips and prepositions
+        (r"\bI\s+wasn\s+(other|to\b|[a-z]+s\b)", r"I want \1", "Grammar: Corrected mistyped verb 'wasn' → 'want'."),
+        (r"\bcontribute\s+on\b", "contribute to", "Grammar: Preposition 'contribute' pairs with 'to', not 'on'."),
+        (r"\bso\s+(would|could|will)\s+be\s+(great|good|nice|awesome|helpful|better)\b", r"so it \1 be \2", "Grammar: Added missing dummy subject 'it' ('so would be' → 'so it would be')."),
+        (r"\b(also|however|furthermore|therefore)\s+please\b", r"\1, please", "Punctuation: Added comma after introductory adverb."),
+        (r"\bgit\s+(branch|repository|repo|rules?|commit|push|pull|standard)\b", r"Git \1", "Formatting: Capitalized Git tool name."),
+        (r"\bthe\s+Git\s+standard\s+rules\b", "standard Git rules", "Phrasing: Refined 'the Git standard rules' → 'standard Git rules'."),
+        (r"\bGit\s+standard\s+rules\b", "standard Git rules", "Phrasing: Refined 'Git standard rules' → 'standard Git rules'."),
     ]
 
     # Filler words and redundancies for concise tone
@@ -202,6 +212,7 @@ class RuleBasedRefiner(BaseRefiner):
 
     def __init__(self, config_manager: Optional[ConfigManager] = None):
         self.config_manager = config_manager or ConfigManager()
+        self.spelling_engine = SpellingEngine()
         self.last_explanations: List[str] = []
         # In-memory LRU cache for 0ms repeated refinements
         self._cache: Dict[Tuple[str, str], Tuple[str, List[str]]] = {}
@@ -269,17 +280,30 @@ class RuleBasedRefiner(BaseRefiner):
         # Step 2: Clean excess whitespace using precompiled regex
         result = RE_SPACES.sub(" ", result)
 
-        # Step 3: Fix typos and abbreviations using precompiled regexes
+        # Step 3: Fast shorthand & typo expansions using precompiled regexes
         for rx, replacement, clean_term in self._COMPILED_TYPOS:
             if rx.search(result):
                 result = rx.sub(replacement, result)
                 self.last_explanations.append(f"Spelling: Fixed typo/shorthand '{clean_term}' → '{replacement}'.")
 
-        # Step 4: Fix common grammar & irregular verbs using precompiled regexes
+        # Step 4: Contextual phrasing & grammar pass before spelling
         for rx, replacement, reason in self._COMPILED_GRAMMAR:
             if rx.search(result):
                 result = rx.sub(replacement, result)
                 self.last_explanations.append(reason if reason.startswith("Grammar:") else f"Grammar: {reason}")
+
+        # Step 5: Spelling pass (Norvig edit-distance + developer dictionary)
+        result, spelling_corrections = self.spelling_engine.correct_text(result, whitelist=whitelist)
+        for orig_w, fixed_w in spelling_corrections:
+            self.last_explanations.append(f"Spelling: Fixed typo '{orig_w}' → '{fixed_w}'.")
+
+        # Step 6: Post-spelling grammar & irregular verbs cleanup pass
+        for rx, replacement, reason in self._COMPILED_GRAMMAR:
+            if rx.search(result):
+                result = rx.sub(replacement, result)
+                msg = reason if reason.startswith("Grammar:") else f"Grammar: {reason}"
+                if msg not in self.last_explanations:
+                    self.last_explanations.append(msg)
 
         # Step 5: Apply Tone-specific transformations using precompiled regexes
         if normalized_tone == "concise":

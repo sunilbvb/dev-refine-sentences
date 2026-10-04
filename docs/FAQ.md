@@ -104,3 +104,22 @@ A: You can view it in two ways:
 
 ### Q: Can I install and run this without `sudo` privileges?
 A: **Yes!** Run `bash packaging/install_user.sh`. It installs binaries to `~/.local/bin` and activates user-level systemd services (`systemctl --user status refine-daemon.service`) with zero root privileges required.
+
+---
+
+### Q: Why did the tool previously not refine "Also please crete a develop branch because I wasn other develoeprs..."?
+A: When no cloud API key (Gemini, Claude, OpenAI) is configured and local Ollama is not active, the tool runs its **100% offline built-in engine**. Previously, the rule engine only contained exact regex substitutions and lacked a general spell checker, meaning words like `crete`, `develoeprs`, `develpo`, `follwo`, and `stndard` were ignored.
+* **The Fix**: We integrated a native, zero-pip pure Python **Spelling Engine** (`src/refiner/spelling.py`) implementing Peter Norvig's edit-distance candidate scoring, alongside a curated developer lexicon.
+* **Now**:
+  * Input: `"Also please crete a develop branch because I wasn other develoeprs to contribute on this tool so would be great if we have the develpo branch updatodate and follwo the git stndard rules."`
+  * Output: `"Also, please create a develop branch because I want other developers to contribute to this tool so it would be great if we have the develop branch up to date and follow standard Git rules."`
+
+---
+
+### Q: How do I run a 100% private, offline AI model with Ollama?
+A: Run our 1-click setup script:
+```bash
+bash scripts/setup_ollama.sh
+```
+This script checks/installs Ollama, starts the daemon, and pulls the lightweight `qwen2.5:0.5b` model (~390MB, sub-second responses). Once active, `dev-refine-sentences` automatically detects Ollama and uses it as the primary offline engine.
+

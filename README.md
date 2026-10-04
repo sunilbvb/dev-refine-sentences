@@ -76,15 +76,27 @@ dev-refine-sentences/
 │   ├── restart.sh                # Restart services cleanly
 │   ├── status.sh                 # Live status health probe
 │   ├── launch_portal.sh          # Open portal in browser
+│   ├── setup_ollama.sh           # 1-Click local offline AI setup (qwen2.5:0.5b)
+│   ├── setup_shortcuts.sh        # Linux GNOME hotkey configuration
+│   ├── setup_shortcuts_mac.sh    # macOS Quick Actions hotkey setup
+│   ├── setup_shortcuts_win.bat   # Windows global hotkey setup
 │   ├── refine_trigger.sh         # OS popup shortcut hook
 │   └── refine_flash.sh           # OS flash replace shortcut hook
 ├── src/                          # Core Python source packages
 │   ├── __init__.py               # Package exports
-│   ├── refiner/                  # NLP engines, rules, and AI connectors
+│   ├── refiner/                  # NLP engines, spelling corrector, rules, AI connectors
+│   │   ├── spelling.py           # Zero-pip Norvig edit-distance spelling engine
+│   │   ├── rules.py              # Offline grammar rules & dynamic snippets
+│   │   ├── manager.py            # Multi-backend coordinator
+│   │   ├── gemini.py             # Google Gemini API connector
+│   │   ├── openai.py             # OpenAI / ChatGPT connector
+│   │   ├── claude.py             # Anthropic Claude connector
+│   │   ├── ollama.py             # Local Ollama connector
+│   │   └── languagetool.py       # Local LanguageTool connector
 │   ├── daemon/                   # In-RAM socket daemon server & client
 │   ├── ui/                       # Desktop Tkinter popup & diff highlighter
-│   ├── clipboard/                # Wayland & X11 selection manager
-│   ├── injector/                 # Atspi key simulation & sound feedback
+│   ├── clipboard/                # Multi-platform selection manager (Wayland, macOS, Windows)
+│   ├── injector/                 # Keystroke simulation & audio feedback
 │   ├── metrics/                  # Linguistic readability metrics
 │   ├── config/                   # Configuration & technical whitelist
 │   ├── history/                  # Audit log & history manager
@@ -107,7 +119,7 @@ dev-refine-sentences/
 │   └── refine-portal.desktop     # Desktop application entry
 ├── tests/                        # Automated unit test suite
 │   ├── __init__.py               # Package exports
-│   └── test_all.py               # Comprehensive unit tests (20 tests)
+│   └── test_all.py               # Comprehensive unit tests (23 tests)
 ├── index.html                    # Interactive web portal & developer documentation hub
 ├── main.py                       # Main CLI entry point
 ├── LICENSE                       # MIT License
