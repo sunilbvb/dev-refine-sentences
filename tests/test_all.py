@@ -31,6 +31,10 @@ class TestSentenceRefiner(unittest.TestCase):
         res = self.refiner.refine("he go to store and buyed apples", tone="standard")
         self.assertEqual(res, "He goes to store and bought apples.")
 
+    def test_pronoun_and_double_verb(self):
+        res = self.refiner.refine("I students are is great", tone="standard")
+        self.assertEqual(res, "My students are great.")
+
     def test_shorthand_expansions(self):
         res = self.refiner.refine("pls send msg btw", tone="standard")
         self.assertEqual(res, "Please send message by the way.")

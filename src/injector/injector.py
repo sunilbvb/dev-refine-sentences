@@ -36,10 +36,13 @@ class KeyInjector:
                 pass
 
     def notify(self, title: str, message: str) -> None:
-        """Send desktop notification via notify-send."""
+        """Send transient desktop notification via notify-send."""
         if self.notify_send:
             try:
-                subprocess.run([self.notify_send, "-a", "Sentence Refiner", title, message], check=False)
+                subprocess.Popen(
+                    [self.notify_send, "-a", "Sentence Refiner", "-t", "2500", "-u", "low", title, message],
+                    stderr=subprocess.DEVNULL,
+                )
             except Exception:
                 pass
 
@@ -66,10 +69,6 @@ class KeyInjector:
                 import gi
                 gi.require_version("Atspi", "2.0")
                 from gi.repository import Atspi
-                # Release modifier keys in case user is still physically holding them
-                for mod in [133, 50, 62, 64, 108]:
-                    Atspi.generate_keyboard_event(mod, None, Atspi.KeySynthType.RELEASE)
-                time.sleep(0.04)
 
                 ctrl_codes = self._get_keycodes(0xffe3, [37])
                 c_codes = self._get_keycodes(0x63, [54])
@@ -80,7 +79,7 @@ class KeyInjector:
                 Atspi.generate_keyboard_event(c_code, None, Atspi.KeySynthType.PRESS)
                 Atspi.generate_keyboard_event(c_code, None, Atspi.KeySynthType.RELEASE)
                 Atspi.generate_keyboard_event(ctrl_code, None, Atspi.KeySynthType.RELEASE)
-                time.sleep(0.10)
+                time.sleep(0.08)
                 return True
             except Exception:
                 pass
@@ -117,7 +116,7 @@ class KeyInjector:
     def simulate_paste(self) -> bool:
         """Simulate Ctrl+V to paste refined text over selected text in any focused field."""
         # Wait small moment for user to lift fingers off hotkey combo
-        time.sleep(0.12)
+        time.sleep(0.15)
 
         # Method 1: Atspi native (Wayland GNOME)
         if self.has_atspi:
@@ -125,10 +124,6 @@ class KeyInjector:
                 import gi
                 gi.require_version("Atspi", "2.0")
                 from gi.repository import Atspi
-                # Release modifier keys (Super, Shift, Alt) so they don't corrupt Ctrl+V
-                for mod in [133, 50, 62, 64, 108]:
-                    Atspi.generate_keyboard_event(mod, None, Atspi.KeySynthType.RELEASE)
-                time.sleep(0.04)
 
                 ctrl_codes = self._get_keycodes(0xffe3, [37])
                 v_codes = self._get_keycodes(0x76, [55])

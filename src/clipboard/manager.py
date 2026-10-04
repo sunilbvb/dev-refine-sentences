@@ -1,8 +1,9 @@
-"""Universal clipboard and primary selection manager supporting Wayland, X11, and Tkinter."""
-
+import os
+import sys
 import shutil
 import subprocess
 import threading
+from pathlib import Path
 from typing import Optional
 
 
@@ -10,6 +11,10 @@ class ClipboardManager:
     """Read and write system clipboard and primary selection buffers."""
 
     def __init__(self):
+        local_bin = str(Path.home() / ".local" / "bin")
+        if local_bin not in os.environ.get("PATH", ""):
+            os.environ["PATH"] = f"{local_bin}:{os.environ.get('PATH', '')}"
+
         self.has_wl = bool(shutil.which("wl-copy") and shutil.which("wl-paste"))
         self.has_xclip = bool(shutil.which("xclip"))
         self.has_xsel = bool(shutil.which("xsel"))
@@ -117,37 +122,47 @@ class ClipboardManager:
         """Write text to system clipboard (and primary selection)."""
         success = False
 
-        # Method 1: Wayland native
+        # Method 1: Wayland native (wl-copy)
         if self.has_wl:
             try:
-                p = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE, text=True)
-                p.communicate(input=text, timeout=0.8)
-                if p.returncode == 0:
+                p1 = subprocess.Popen(["wl-copy"], stdin=subprocess.PIPE, text=True)
+                p1.communicate(input=text, timeout=0.8)
+                if p1.returncode == 0:
                     success = True
+                # Also mirror into primary selection buffer
+                p2 = subprocess.Popen(["wl-copy", "--primary"], stdin=subprocess.PIPE, text=True)
+                p2.communicate(input=text, timeout=0.8)
             except Exception:
                 pass
 
-        # Method 2: xclip
+        # Method 2: xclip (X11)
         if self.has_xclip:
             try:
-                p = subprocess.Popen(["xclip", "-selection", "clipboard"], stdin=subprocess.PIPE, text=True)
-                p.communicate(input=text, timeout=0.8)
-                if p.returncode == 0:
+                p1 = subprocess.Popen(["xclip", "-selection", "clipboard"], stdin=subprocess.PIPE, text=True)
+                p1.communicate(input=text, timeout=0.8)
+                if p1.returncode == 0:
                     success = True
+                p2 = subprocess.Popen(["xclip", "-selection", "primary"], stdin=subprocess.PIPE, text=True)
+                p2.communicate(input=text, timeout=0.8)
             except Exception:
                 pass
 
-        # Method 3: Tkinter fallback
-        try:
-            import tkinter as tk
-            root = tk.Tk()
-            root.withdraw()
-            root.clipboard_clear()
-            root.clipboard_append(text)
-            root.update()
-            root.destroy()
-            success = True
-        except Exception:
-            pass
+        # Method 3: Ephemeral subprocess Tkinter fallback (never leaves dangling X11 selection in daemon)
+        if not success:
+            try:
+                subprocess.run(
+                    [
+                        sys.executable,
+                        "-c",
+                        "import tkinter as tk, sys; r = tk.Tk(); r.withdraw(); r.clipboard_clear(); r.clipboard_append(sys.stdin.read()); r.update(); r.destroy()",
+                    ],
+                    input=text,
+                    text=True,
+                    timeout=0.5,
+                    check=False,
+                )
+                success = True
+            except Exception:
+                pass
 
         return success

@@ -97,7 +97,47 @@ class RuleBasedRefiner(BaseRefiner):
         (r"\b(he|she|it)\s+want\b", r"\1 wants", "Subject-verb agreement: third-person singular uses 'wants'."),
         (r"\bbuyed\b", "bought", "Irregular verb: 'buy' past tense is 'bought'."),
         (r"\bcatched\b", "caught", "Irregular verb: 'catch' past tense is 'caught'."),
-        (r"\bteached\b", "taught", "Irregular verb: 'teach' past tense is 'taught'."),
+        # Duplicate verb / copula collision
+        (r"\b(are\s+is|is\s+are)\b", "are", "Grammar: Removed duplicate verb 'are is' → 'are'."),
+        (r"\b(was\s+were|were\s+was)\b", "were", "Grammar: Removed duplicate past-tense verb."),
+        (r"\b(has\s+have|have\s+has)\b", "have", "Grammar: Removed duplicate auxiliary verb."),
+        (r"\b(will\s+would|would\s+will)\b", "will", "Grammar: Removed duplicate modal verb."),
+        (r"\b(can\s+could|could\s+can)\b", "can", "Grammar: Removed duplicate modal verb."),
+        (r"\b(do\s+does|does\s+do)\b", "do", "Grammar: Removed duplicate auxiliary verb."),
+
+        # Subjective/objective pronoun before noun instead of possessive determiner
+        (r"\bI\s+(students?|friends?|parents?|colleagues?|teachers?|people|kids|children|folks|guys|team|family|boss|work|project|code|computer|laptop|phone|room|home|house|car|job|office|class|school|university|dog|cat|sister|brother|mother|father|wife|husband|son|daughter)\b", r"My \1", "Grammar: Corrected pronoun 'I' to possessive 'My' before noun."),
+        (r"\bme\s+(students?|friends?|parents?|colleagues?|teachers?|people|kids|children|folks|guys|team|family|boss|work|project|code|computer|laptop|phone|room|home|house|car|job|office|class|school|university|dog|cat|sister|brother|mother|father|wife|husband|son|daughter)\b", r"My \1", "Grammar: Corrected pronoun 'me' to possessive 'My' before noun."),
+        (r"\bhe\s+(students?|friends?|parents?|colleagues?|team|family|boss|project|computer|car|job|dog|cat)\b", r"His \1", "Grammar: Corrected pronoun 'he' to possessive 'His'."),
+        (r"\bshe\s+(students?|friends?|parents?|colleagues?|team|family|boss|project|computer|car|job|dog|cat)\b", r"Her \1", "Grammar: Corrected pronoun 'she' to possessive 'Her'."),
+        (r"\bthey\s+(students?|friends?|parents?|colleagues?|team|family|boss|project|computer|car|job|dog|cat)\b", r"Their \1", "Grammar: Corrected pronoun 'they' to possessive 'Their'."),
+
+        # Missing copula (be-verb) before adjective
+        (r"\b(he|she|it)\s+(very\s+good|very\s+great|very\s+nice|very\s+bad|very\s+happy|good|great|nice|happy|ready|busy|smart|awesome)\b", r"\1 is \2", "Grammar: Added missing auxiliary verb 'is'."),
+        (r"\b(they|we|you)\s+(very\s+good|very\s+great|very\s+nice|very\s+bad|very\s+happy|good|great|nice|happy|ready|busy|smart|awesome)\b", r"\1 are \2", "Grammar: Added missing auxiliary verb 'are'."),
+        (r"\bI\s+(very\s+good|very\s+great|very\s+nice|very\s+bad|very\s+happy|good|great|nice|happy|ready|busy|smart|awesome)\b", r"I am \1", "Grammar: Added missing auxiliary verb 'am'."),
+
+        # Past-tense after auxiliary 'did' / 'didn't'
+        (r"\b(did\s+not|didn't)\s+saw\b", r"\1 see", "Grammar: Auxiliary 'did' takes base verb 'see'."),
+        (r"\b(did\s+not|didn't)\s+went\b", r"\1 go", "Grammar: Auxiliary 'did' takes base verb 'go'."),
+        (r"\b(did\s+not|didn't)\s+came\b", r"\1 come", "Grammar: Auxiliary 'did' takes base verb 'come'."),
+        (r"\b(did\s+not|didn't)\s+ate\b", r"\1 eat", "Grammar: Auxiliary 'did' takes base verb 'eat'."),
+        (r"\b(did\s+not|didn't)\s+knew\b", r"\1 know", "Grammar: Auxiliary 'did' takes base verb 'know'."),
+
+        # Double negatives
+        (r"\b(don't|doesn't|didn't)\s+have\s+no\b", r"\1 have any", "Grammar: Resolved double negative."),
+        (r"\b(don't|doesn't|didn't)\s+know\s+nothing\b", r"\1 know anything", "Grammar: Resolved double negative."),
+        (r"\b(can't|couldn't)\s+see\s+nothing\b", r"\1 see anything", "Grammar: Resolved double negative."),
+        (r"\b(can't|couldn't)\s+find\s+no\b", r"\1 find any", "Grammar: Resolved double negative."),
+
+        # Redundant comparatives & irregular plurals
+        (r"\bmore\s+better\b", "better", "Grammar: Removed redundant comparative 'more better' → 'better'."),
+        (r"\bmore\s+faster\b", "faster", "Grammar: Removed redundant comparative 'more faster' → 'faster'."),
+        (r"\bmore\s+easier\b", "easier", "Grammar: Removed redundant comparative 'more easier' → 'easier'."),
+        (r"\bchilds\b", "children", "Irregular plural: 'child' plural is 'children'."),
+        (r"\bpeoples\b", "people", "Irregular plural: 'people' is already plural."),
+        (r"\bfoots\b", "feet", "Irregular plural: 'foot' plural is 'feet'."),
+        (r"\btooths\b", "teeth", "Irregular plural: 'tooth' plural is 'teeth'."),
         (r"\bfeeled\b", "felt", "Irregular verb: 'feel' past tense is 'felt'."),
         (r"\brunned\b", "ran", "Irregular verb: 'run' past tense is 'ran'."),
     ]
@@ -239,7 +279,7 @@ class RuleBasedRefiner(BaseRefiner):
         for rx, replacement, reason in self._COMPILED_GRAMMAR:
             if rx.search(result):
                 result = rx.sub(replacement, result)
-                self.last_explanations.append(f"Grammar: {reason}")
+                self.last_explanations.append(reason if reason.startswith("Grammar:") else f"Grammar: {reason}")
 
         # Step 5: Apply Tone-specific transformations using precompiled regexes
         if normalized_tone == "concise":
