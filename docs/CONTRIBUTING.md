@@ -68,19 +68,48 @@ Create a new file in `refiner/` inheriting from `BaseRefiner` in [`refiner/base.
 
 ---
 
+## 🌿 Git Branching Strategy & Standards
+
+We follow standard **Git Flow** conventions to ensure a clean, reliable release cycle:
+
+* **`main`**: Production-ready, stable releases only. Directly protected.
+* **`develop`**: Active integration branch where all upcoming features and fixes merge.
+* **`feature/<name>`**: New capabilities or enhancements (branch from `develop`).
+* **`fix/<name>`**: Bug fixes (branch from `develop`).
+* **`docs/<name>`**: Documentation updates (branch from `develop`).
+
+---
+
 ## 📬 Pull Request Process
 
-1. Fork the repo and create your branch from `main`:
+1. Clone or fork the repository and ensure your local `develop` branch is up to date:
    ```bash
-   git checkout -b feature/amazing-feature
+   git checkout develop
+   git pull origin develop
    ```
-2. Make your changes adhering to the Zero-Pip standard.
-3. Run the test suite to ensure all unit tests pass:
+
+2. Create a focused topic branch from `develop`:
    ```bash
-   python3 -m unittest discover -s tests -p "test_*.py"
+   git checkout -b feature/your-feature-name develop
+   # or for bug fixes:
+   git checkout -b fix/issue-description develop
    ```
-4. Commit with clean, descriptive commit messages:
+
+3. Make your changes adhering to the Zero-Pip Standard (100% Python Standard Library).
+
+4. Run the automated test suite to verify everything passes:
    ```bash
+   python3 tests/test_all.py
+   ```
+
+5. Commit using **Conventional Commits** format:
+   ```bash
+   # Formats: feat:, fix:, docs:, test:, refactor:, chore:
    git commit -m "feat(refiner): add rule for conditional clauses"
+   git commit -m "fix(clipboard): resolve wayland primary selection timeout"
    ```
-5. Push to your fork and submit a Pull Request!
+
+6. Push your branch to GitHub and open a **Pull Request targeted against `develop`**!
+   ```bash
+   git push -u origin feature/your-feature-name
+   ```
