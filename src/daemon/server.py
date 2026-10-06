@@ -9,6 +9,7 @@ import json
 import socket
 import signal
 import threading
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -33,6 +34,7 @@ class RefineDaemon:
         self._mgr_mtime = None
         self.clipboard = ClipboardManager()
         self.injector = KeyInjector()
+        self._tap_detector = {}
         self.running = False
 
     @property
@@ -129,7 +131,35 @@ class RefineDaemon:
             except Exception as e:
                 pass
 
+    def _should_trigger_tap(self, mode: str) -> bool:
+        """Check multi-tap timing if shortcut is configured with *2 or *3."""
+        key = "hotkey" if mode in ("clipboard", "flash") else "hotkey_popup"
+        spec = self.config_mgr.get_setting(key) or ""
+        if "*" not in spec:
+            return True
+        try:
+            _, _, count_str = spec.partition("*")
+            required_taps = int(count_str)
+        except Exception:
+            return True
+
+        if required_taps <= 1:
+            return True
+
+        now = time.time()
+        last_tap = self._tap_detector.get(key, 0.0)
+        # 550ms window allows natural comfortable double-tapping
+        if now - last_tap <= 0.55:
+            self._tap_detector[key] = 0.0
+            return True
+
+        self._tap_detector[key] = now
+        return False
+
     def _handle_request(self, mode: str, tone: str, paste: bool) -> None:
+        if not self._should_trigger_tap(mode):
+            return
+
         # Step 1: Capture highlighted text directly via primary selection or Atspi
         raw_text = self.clipboard.get_primary_selection()
         if not raw_text or not raw_text.strip():

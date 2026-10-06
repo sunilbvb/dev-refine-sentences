@@ -284,6 +284,27 @@ class TestHotkeyParsing(unittest.TestCase):
                 parse_hotkey(bad)
 
 
+class TestDaemonTapDetector(unittest.TestCase):
+    def test_multi_tap_timing(self):
+        from unittest.mock import MagicMock
+        from daemon.server import RefineDaemon
+
+        daemon = RefineDaemon()
+        daemon.config_mgr = MagicMock()
+        daemon.config_mgr.get_setting.return_value = "alt+a*2"
+
+        # First tap -> False (records time)
+        self.assertFalse(daemon._should_trigger_tap("flash"))
+        # Immediate second tap -> True
+        self.assertTrue(daemon._should_trigger_tap("flash"))
+        # Third tap right after -> False (starts new cycle)
+        self.assertFalse(daemon._should_trigger_tap("flash"))
+
+        # Non-multi-tap returns True immediately
+        daemon.config_mgr.get_setting.return_value = "ctrl+alt+r"
+        self.assertTrue(daemon._should_trigger_tap("flash"))
+
+
 if __name__ == "__main__":
     unittest.main()
 

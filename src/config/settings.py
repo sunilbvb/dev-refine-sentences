@@ -203,7 +203,8 @@ class ConfigManager:
         if not shutil.which("gsettings"):
             return
         try:
-            parts = [p.strip().lower() for p in combo.split("+")]
+            combo_clean = combo.split("*")[0].strip()
+            parts = [p.strip().lower() for p in combo_clean.split("+")]
             base_key = parts[-1]
             mod_map = {
                 "ctrl": "<Ctrl>", "control": "<Ctrl>", "alt": "<Alt>", "option": "<Alt>",
