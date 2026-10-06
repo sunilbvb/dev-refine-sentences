@@ -108,6 +108,19 @@ class KeyInjector:
             pass
         return fallback_codes
 
+    def release_modifiers(self) -> None:
+        """Synthetically release Alt, Ctrl, Shift modifiers so they don't interfere with copy/paste."""
+        if self.has_atspi:
+            try:
+                import gi
+                gi.require_version("Atspi", "2.0")
+                from gi.repository import Atspi
+                # Release Left/Right Alt (64, 108), Left/Right Ctrl (37, 105), Shift (50, 62)
+                for code in (64, 108, 37, 105, 50, 62):
+                    Atspi.generate_keyboard_event(code, None, Atspi.KeySynthType.RELEASE)
+            except Exception:
+                pass
+
     def simulate_copy(self) -> bool:
         """Simulate copy (Cmd+C on macOS, Ctrl+C on Linux/Windows) to copy selected text."""
         # Method 0: macOS native via osascript (Cmd+C)
@@ -148,6 +161,8 @@ class KeyInjector:
                 gi.require_version("Atspi", "2.0")
                 from gi.repository import Atspi
 
+                self.release_modifiers()
+                time.sleep(0.02)
                 ctrl_codes = self._get_keycodes(0xffe3, [37])
                 c_codes = self._get_keycodes(0x63, [54])
                 ctrl_code = ctrl_codes[0] if ctrl_codes else 37
@@ -230,8 +245,8 @@ class KeyInjector:
             try:
                 import gi
                 gi.require_version("Atspi", "2.0")
-                from gi.repository import Atspi
-
+                self.release_modifiers()
+                time.sleep(0.02)
                 ctrl_codes = self._get_keycodes(0xffe3, [37])
                 v_codes = self._get_keycodes(0x76, [55])
                 ctrl_code = ctrl_codes[0] if ctrl_codes else 37

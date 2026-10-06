@@ -35,6 +35,7 @@ class RefineDaemon:
         self.clipboard = ClipboardManager()
         self.injector = KeyInjector()
         self._tap_detector = {}
+        self._linux_listener = None
         self.running = False
 
     @property
@@ -50,6 +51,8 @@ class RefineDaemon:
                 config_manager=self.config_mgr,
             )
             self._mgr_mtime = mtime
+            if self._linux_listener:
+                self._linux_listener.update_hotkey(self.config_mgr.get_setting("hotkey") or "alt+a*2")
         return self._mgr
 
     def start(self) -> None:
@@ -71,8 +74,33 @@ class RefineDaemon:
         server_sock.listen(5)
         self.running = True
 
+        # Start native evdev keyboard listener on Linux for reliable global Alt+A*2
+        if sys.platform.startswith("linux"):
+            try:
+                from hotkey.linux_hotkey import LinuxHotkeyListener
+                hotkey_spec = self.config_mgr.get_setting("hotkey") or "alt+a*2"
+                self._linux_listener = LinuxHotkeyListener(
+                    hotkey_spec=hotkey_spec,
+                    on_trigger=lambda: self._handle_request(
+                        mode="clipboard",
+                        tone=self.config_mgr.get_setting("preferred_tone") or "standard",
+                        paste=True,
+                        skip_tap_check=True,
+                    ),
+                )
+                self._linux_listener.start()
+                print(f"⌨️  Native Linux hotkey listener active for '{hotkey_spec}'!")
+            except Exception as e:
+                print(f"Note: Could not start native Linux hotkey listener: {e}")
+                self._linux_listener = None
+
         def handle_shutdown(signum, frame):
             self.running = False
+            if self._linux_listener:
+                try:
+                    self._linux_listener.stop()
+                except Exception:
+                    pass
             try:
                 server_sock.close()
                 SOCKET_PATH.unlink(missing_ok=True)
@@ -156,9 +184,13 @@ class RefineDaemon:
         self._tap_detector[key] = now
         return False
 
-    def _handle_request(self, mode: str, tone: str, paste: bool) -> None:
-        if not self._should_trigger_tap(mode):
+    def _handle_request(self, mode: str, tone: str, paste: bool, skip_tap_check: bool = False) -> None:
+        if not skip_tap_check and not self._should_trigger_tap(mode):
             return
+
+        # Give small moment (0.04s) for user key release and release modifiers synthetically
+        time.sleep(0.04)
+        self.injector.release_modifiers()
 
         # Step 1: Capture highlighted text directly via primary selection or Atspi
         raw_text = self.clipboard.get_primary_selection()
@@ -167,7 +199,7 @@ class RefineDaemon:
             raw_text = self.clipboard.get_text()
 
         if not raw_text or not raw_text.strip():
-            self.injector.notify("Sentence Refiner", "Please highlight a sentence first, then press shortcut.")
+            self.injector.notify("Sentence Refiner", "Please highlight text to refine, then press Alt + A twice.")
             return
 
         raw_text = raw_text.strip()
@@ -176,6 +208,9 @@ class RefineDaemon:
         # Instant Flash Mode (Sub-5ms)
         if mode == "clipboard" or mode == "flash":
             refined = self.refiner_mgr.refine(raw_text, tone=tone)
+            if refined == raw_text:
+                self.injector.notify("Sentence Refiner ✨", "Sentence is already clear and correct!")
+                return
             self.clipboard.set_text(refined)
             self.history_mgr.record(raw_text, refined, tone, active_engine.name)
             if paste:

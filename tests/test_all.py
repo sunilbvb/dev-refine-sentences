@@ -305,6 +305,21 @@ class TestDaemonTapDetector(unittest.TestCase):
         self.assertTrue(daemon._should_trigger_tap("flash"))
 
 
+class TestLinuxHotkeyListener(unittest.TestCase):
+    def test_spec_parsing(self):
+        from hotkey.linux_hotkey import LinuxHotkeyListener
+        listener = LinuxHotkeyListener(hotkey_spec="alt+a*2")
+        self.assertEqual(listener.target_code, 30)  # KEY_A
+        self.assertEqual(listener.required_mods, {"alt"})
+        self.assertEqual(listener.required_taps, 2)
+
+        listener.update_hotkey("ctrl+alt+r")
+        self.assertEqual(listener.target_code, 19)  # KEY_R
+        self.assertEqual(listener.required_mods, {"ctrl", "alt"})
+        self.assertEqual(listener.required_taps, 1)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
