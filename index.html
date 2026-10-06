@@ -141,9 +141,12 @@
             <small>auto = Gemini &rarr; OpenAI &rarr; Claude &rarr; Ollama &rarr; LanguageTool &rarr; rules</small></div>
           <div class="settings-field"><label for="set-model">Local model (Ollama)</label><select id="set-model"></select>
             <small id="set-model-hint"></small></div>
-          <div class="settings-field"><label for="set-hotkey">Global hotkey (macOS)</label>
-            <input id="set-hotkey" type="text" placeholder="ctrl+alt+r" spellcheck="false">
-            <small>Modifiers: ctrl, alt, shift, cmd + a letter, e.g. ctrl+alt+r. Add *2 to require a double-tap, e.g. cmd+a*2</small></div>
+          <div class="settings-field"><label for="set-hotkey">⚡ Flash Shortcut (Instant Replace)</label>
+            <input id="set-hotkey" type="text" placeholder="super+shift+r" spellcheck="false">
+            <small>Applies instantly to Linux GNOME, macOS & Windows (e.g. super+shift+r, ctrl+shift+e, or cmd+a*2)</small></div>
+          <div class="settings-field"><label for="set-hotkey-popup">🪟 Popup Shortcut (Modal with Diff)</label>
+            <input id="set-hotkey-popup" type="text" placeholder="ctrl+alt+r" spellcheck="false">
+            <small>Applies instantly to Linux GNOME & desktop (e.g. ctrl+alt+r or alt+r)</small></div>
         </div>
         <p><small>API keys (set via <code>--set-key</code>): <span id="set-keys"></span></small></p>
         <div class="settings-actions">

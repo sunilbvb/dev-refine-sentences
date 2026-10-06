@@ -13,6 +13,7 @@ window.SettingsPanel = {
       engine: document.getElementById("set-engine"),
       model: document.getElementById("set-model"),
       hotkey: document.getElementById("set-hotkey"),
+      hotkeyPopup: document.getElementById("set-hotkey-popup"),
       save: document.getElementById("btn-save-settings"),
       status: document.getElementById("settings-status"),
       modelHint: document.getElementById("set-model-hint"),
@@ -41,7 +42,8 @@ window.SettingsPanel = {
     }
     fill(els.tone, cfg.options.tones, cfg.preferred_tone);
     fill(els.engine, cfg.options.engines, cfg.preferred_engine);
-    els.hotkey.value = cfg.hotkey;
+    if (els.hotkey && cfg.hotkey) els.hotkey.value = cfg.hotkey;
+    if (els.hotkeyPopup && cfg.hotkey_popup) els.hotkeyPopup.value = cfg.hotkey_popup;
     els.keys.textContent = Object.entries(cfg.api_keys_configured)
       .map(([k, v]) => `${k}: ${v ? "configured" : "not set"}`).join("  |  ");
 
@@ -67,20 +69,25 @@ window.SettingsPanel = {
 
     els.save.addEventListener("click", async () => {
       try {
+        const payload = {
+          preferred_tone: els.tone.value,
+          preferred_engine: els.engine.value,
+          ollama_model: els.model.value,
+          hotkey: els.hotkey ? els.hotkey.value : undefined,
+        };
+        if (els.hotkeyPopup && els.hotkeyPopup.value) {
+          payload.hotkey_popup = els.hotkeyPopup.value;
+        }
         const resp = await fetch(`${base}/api/config`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            preferred_tone: els.tone.value,
-            preferred_engine: els.engine.value,
-            ollama_model: els.model.value,
-            hotkey: els.hotkey.value,
-          }),
+          body: JSON.stringify(payload),
         });
         const data = await resp.json();
         if (!resp.ok) return say(data.error || "Save failed", false);
-        els.hotkey.value = data.hotkey;
-        say("Saved. Applies instantly - no restart needed.", true);
+        if (data.hotkey && els.hotkey) els.hotkey.value = data.hotkey;
+        if (data.hotkey_popup && els.hotkeyPopup) els.hotkeyPopup.value = data.hotkey_popup;
+        say("Saved. Applies instantly to desktop shortcuts & daemon!", true);
       } catch (e) {
         say("Could not reach the server.", false);
       }

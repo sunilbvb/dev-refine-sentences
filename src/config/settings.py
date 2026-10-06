@@ -48,7 +48,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "preferred_tone": "standard",
     "preferred_engine": "auto",
     "ollama_model": "qwen2.5:3b",
-    "hotkey": "ctrl+alt+r",
+    "hotkey": "super+shift+r",
+    "hotkey_popup": "ctrl+alt+r",
     "max_history_entries": 50,
 }
 
@@ -56,7 +57,7 @@ TONES = ["standard", "concise", "professional", "friendly", "bullet_points", "em
 ENGINES = ["auto", "rules", "gemini", "openai", "chatgpt", "claude", "anthropic", "ollama", "languagetool"]
 # Settings editable via CLI (--set-*) and the web portal. API keys are deliberately excluded
 # from the web path; they stay CLI/env only.
-EDITABLE_SETTINGS = ["preferred_tone", "preferred_engine", "ollama_model", "hotkey"]
+EDITABLE_SETTINGS = ["preferred_tone", "preferred_engine", "ollama_model", "hotkey", "hotkey_popup"]
 
 
 def validate_setting(key: str, value: str) -> str:
@@ -75,7 +76,7 @@ def validate_setting(key: str, value: str) -> str:
     elif key == "ollama_model":
         if not value or any(c.isspace() for c in value) or len(value) > 100:
             raise ValueError("Model name must be non-empty, without spaces (e.g. qwen2.5:3b).")
-    elif key == "hotkey":
+    elif key in ("hotkey", "hotkey_popup"):
         from hotkey.mac_hotkey import parse_hotkey_spec
         parse_hotkey_spec(value)  # raises ValueError on a bad combo
         value = value.lower().replace(" ", "")
@@ -188,7 +189,37 @@ class ConfigManager:
         cfg = self.load_config()
         cfg[key] = clean
         self._save_config(cfg)
+
+        # On Linux with GNOME, apply desktop shortcuts live
+        if key in ("hotkey", "hotkey_popup"):
+            self._apply_linux_shortcut(key, clean)
+
         return clean
+
+    def _apply_linux_shortcut(self, key: str, combo: str) -> None:
+        """Update GNOME desktop shortcuts via gsettings if available."""
+        import shutil
+        import subprocess
+        if not shutil.which("gsettings"):
+            return
+        try:
+            parts = [p.strip().lower() for p in combo.split("+")]
+            base_key = parts[-1]
+            mod_map = {
+                "ctrl": "<Ctrl>", "control": "<Ctrl>", "alt": "<Alt>", "option": "<Alt>",
+                "shift": "<Shift>", "super": "<Super>", "cmd": "<Super>", "win": "<Super>",
+            }
+            gnome_mods = "".join(mod_map.get(m, "") for m in parts[:-1])
+            gnome_binding = f"{gnome_mods}{base_key}"
+
+            path = (
+                "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
+                if key == "hotkey"
+                else "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+            )
+            subprocess.run(["gsettings", "set", path, "binding", gnome_binding], capture_output=True, timeout=2)
+        except Exception:
+            pass
 
     def public_settings(self) -> Dict[str, Any]:
         """Editable settings plus API-key *status* (never the key values)."""

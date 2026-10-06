@@ -19,7 +19,7 @@ KEY_CODES = {
     "i": 34, "p": 35, "l": 37, "j": 38, "k": 40, "n": 45, "m": 46,
 }
 CARBON_MODS = {"cmd": 0x100, "shift": 0x200, "alt": 0x800, "ctrl": 0x1000}
-MOD_ALIASES = {"command": "cmd", "option": "alt", "opt": "alt", "control": "ctrl"}
+MOD_ALIASES = {"command": "cmd", "option": "alt", "opt": "alt", "control": "ctrl", "super": "cmd", "win": "cmd"}
 DEFAULT_HOTKEY = "ctrl+alt+r"
 CMD_FLAG = 0x100000  # kCGEventFlagMaskCommand
 KEY_C, KEY_V = 8, 9
