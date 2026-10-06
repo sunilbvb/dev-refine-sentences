@@ -48,7 +48,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "preferred_tone": "standard",
     "preferred_engine": "auto",
     "ollama_model": "qwen2.5:0.5b",
-    "hotkey": "ctrl+alt+a",
+    "hotkey": "alt+s*2",
     "hotkey_popup": "ctrl+alt+r",
     "max_history_entries": 50,
 }
