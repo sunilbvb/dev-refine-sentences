@@ -52,6 +52,8 @@ def discover_keyboard_devices() -> List[str]:
             with open(proc_devices, "r", encoding="utf-8") as f:
                 content = f.read()
             for block in content.split("\n\n"):
+                if "RefineVirtual" in block:
+                    continue
                 if "Handlers=" in block and "kbd" in block:
                     for token in block.split():
                         if token.startswith("event"):

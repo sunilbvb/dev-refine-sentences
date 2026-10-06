@@ -139,8 +139,36 @@ class ClipboardManager:
             return selected.strip()
         return self.get_text().strip()
 
-    def set_text(self, text: str) -> bool:
-        """Write text to system clipboard (and primary selection)."""
+    def clear(self) -> None:
+        """Clear system clipboard content without touching primary selection."""
+        if self.has_wl:
+            try:
+                subprocess.run(["wl-copy", "--clear"], timeout=0.5, check=False)
+                return
+            except Exception:
+                pass
+        self.set_text("")
+
+    def set_primary_selection(self, text: str) -> bool:
+        """Explicitly set Linux primary selection (mouse highlight buffer)."""
+        if self.has_wl:
+            try:
+                p = subprocess.Popen(["wl-copy", "--primary"], stdin=subprocess.PIPE, text=True)
+                p.communicate(input=text, timeout=0.8)
+                return p.returncode == 0
+            except Exception:
+                pass
+        if self.has_xclip:
+            try:
+                p = subprocess.Popen(["xclip", "-selection", "primary"], stdin=subprocess.PIPE, text=True)
+                p.communicate(input=text, timeout=0.8)
+                return p.returncode == 0
+            except Exception:
+                pass
+        return False
+
+    def set_text(self, text: str, sync_primary: bool = False) -> bool:
+        """Write text to system clipboard."""
         success = False
 
         # Method 1: macOS native (pbcopy)
@@ -160,8 +188,8 @@ class ClipboardManager:
                 p1.communicate(input=text, timeout=0.8)
                 if p1.returncode == 0:
                     success = True
-                p2 = subprocess.Popen(["wl-copy", "--primary"], stdin=subprocess.PIPE, text=True)
-                p2.communicate(input=text, timeout=0.8)
+                if sync_primary:
+                    self.set_primary_selection(text)
             except Exception:
                 pass
 
@@ -172,8 +200,8 @@ class ClipboardManager:
                 p1.communicate(input=text, timeout=0.8)
                 if p1.returncode == 0:
                     success = True
-                p2 = subprocess.Popen(["xclip", "-selection", "primary"], stdin=subprocess.PIPE, text=True)
-                p2.communicate(input=text, timeout=0.8)
+                if sync_primary:
+                    self.set_primary_selection(text)
             except Exception:
                 pass
 

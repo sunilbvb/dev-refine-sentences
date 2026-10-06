@@ -123,9 +123,11 @@ flowchart TD
 - [`manager.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/clipboard/manager.py): Universal clipboard interface with multi-backend fallback.
 
 ### `src/injector/`
-- [`injector.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/injector/injector.py): Keystroke injection via `ydotool`, `wtype`, or `xdotool`. Sends desktop notifications via `notify-send`.
+- [`injector.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/injector/injector.py): Universal keystroke injector and desktop notification dispatcher. Prioritizes kernel-level uinput virtual keyboard on Linux, with fallback to Atspi, `ydotool`, `wtype`, or `xdotool`.
+- [`uinput_injector.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/injector/uinput_injector.py): 100% Python standard library `/dev/uinput` virtual hardware keyboard injector. Emulates kernel-level keystrokes to seamlessly bypass Wayland and sandbox boundaries in Electron, Snap, and browser windows.
 
 ### `src/hotkey/`
+- [`linux_hotkey.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/hotkey/linux_hotkey.py): Native Linux multi-tap global hotkey listener using pure Python standard library `select.poll()` over `/dev/input/event*`.
 - [`mac_hotkey.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/hotkey/mac_hotkey.py): Native macOS global hotkey and multi-tap listener using pure standard library `ctypes` over Carbon and Quartz frameworks.
 
 ### `src/ui/`

@@ -102,6 +102,10 @@ class RefineDaemon:
                 except Exception:
                     pass
             try:
+                self.injector.close()
+            except Exception:
+                pass
+            try:
                 server_sock.close()
                 SOCKET_PATH.unlink(missing_ok=True)
             except Exception:
@@ -188,30 +192,35 @@ class RefineDaemon:
         if not skip_tap_check and not self._should_trigger_tap(mode):
             return
 
-        # Give small moment (0.04s) for user key release and release modifiers synthetically
-        time.sleep(0.04)
+        # Give 0.15s for user to release physical hotkey combo and release modifiers synthetically
+        time.sleep(0.15)
         self.injector.release_modifiers()
 
         # Step 1: Capture text from active focused window
-        sentinel = f"__REFINE_{time.time()}__"
-        self.clipboard.set_text(sentinel)
+        # Clear clipboard to cleanly detect newly copied text without poisoning primary selection
+        self.clipboard.clear()
+        time.sleep(0.02)
         self.injector.simulate_copy()
         copied = self.clipboard.get_text()
 
-        if copied and copied != sentinel and copied.strip():
+        if copied and copied.strip() and not copied.startswith("__REFINE_"):
             # User had text highlighted in active window
             raw_text = copied
         else:
             # User is in an input field (e.g. Antigravity chat, Google Chat) without selecting text!
             # Select all with Ctrl+A, then Copy!
             self.injector.simulate_select_all()
+            time.sleep(0.04)
             self.injector.simulate_copy()
             copied_all = self.clipboard.get_text()
-            if copied_all and copied_all != sentinel and copied_all.strip():
+            if copied_all and copied_all.strip() and not copied_all.startswith("__REFINE_"):
                 raw_text = copied_all
             else:
                 # Fallback: check mouse primary selection
                 raw_text = self.clipboard.get_primary_selection()
+
+        if raw_text and raw_text.startswith("__REFINE_"):
+            raw_text = ""
 
         if not raw_text or not raw_text.strip():
             self.injector.notify("Sentence Refiner", "Please type or select text, then press Alt + S twice.")
@@ -235,6 +244,7 @@ class RefineDaemon:
             self.clipboard.set_text(refined)
             self.history_mgr.record(raw_text, refined, tone, active_engine.name)
             if paste:
+                time.sleep(0.04)
                 self.injector.simulate_paste()
                 self.injector.play_sound("complete")
             summary_orig = (raw_text[:35] + "...") if len(raw_text) > 35 else raw_text
@@ -274,6 +284,7 @@ class RefineDaemon:
             self.clipboard.set_text(final_text)
             self.history_mgr.record(raw_text, final_text, popup.selected_tone, current_engine.name)
             if paste:
+                time.sleep(0.04)
                 self.injector.simulate_paste()
                 self.injector.play_sound("complete")
 

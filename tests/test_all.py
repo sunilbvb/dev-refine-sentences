@@ -319,6 +319,24 @@ class TestLinuxHotkeyListener(unittest.TestCase):
         self.assertEqual(listener.required_taps, 1)
 
 
+class TestUinputInjector(unittest.TestCase):
+    def test_uinput_availability_and_injector(self):
+        from injector.injector import KeyInjector
+        from injector.uinput_injector import UinputVirtualKeyboard
+
+        injector = KeyInjector()
+        self.assertIsNotNone(injector)
+        if sys.platform.startswith("linux") and Path("/dev/uinput").exists():
+            vk = UinputVirtualKeyboard()
+            self.assertTrue(vk.is_available)
+            self.assertTrue(vk.select_all())
+            self.assertTrue(vk.copy())
+            self.assertTrue(vk.paste())
+            vk.close()
+            self.assertFalse(vk.is_available)
+        injector.close()
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -19,6 +19,15 @@ class KeyInjector:
         self.xdotool = shutil.which("xdotool")
         self.notify_send = shutil.which("notify-send")
         self.canberra = shutil.which("canberra-gtk-play")
+        self.uinput = None
+        if not self.is_mac and not self.is_win:
+            try:
+                from .uinput_injector import UinputVirtualKeyboard
+                self.uinput = UinputVirtualKeyboard()
+                if not self.uinput.is_available:
+                    self.uinput = None
+            except Exception:
+                self.uinput = None
         self.has_atspi = self._check_atspi()
 
     def _check_atspi(self) -> bool:
@@ -110,6 +119,11 @@ class KeyInjector:
 
     def release_modifiers(self) -> None:
         """Synthetically release Alt, Ctrl, Shift modifiers so they don't interfere with copy/paste."""
+        if self.uinput and self.uinput.is_available:
+            try:
+                self.uinput.release_all_modifiers()
+            except Exception:
+                pass
         if self.has_atspi:
             try:
                 import gi
@@ -134,6 +148,9 @@ class KeyInjector:
                 return True
             except Exception:
                 pass
+
+        if self.uinput and self.uinput.is_available:
+            return self.uinput.select_all()
 
         if self.has_atspi:
             try:
@@ -191,6 +208,10 @@ class KeyInjector:
                 return True
             except Exception:
                 pass
+
+        # Method 1: Kernel-level uinput virtual keyboard (Linux)
+        if self.uinput and self.uinput.is_available:
+            return self.uinput.copy()
 
         # Method 1: Atspi native (Wayland GNOME)
         if self.has_atspi:
@@ -278,6 +299,10 @@ class KeyInjector:
             except Exception:
                 pass
 
+        # Method 1: Kernel-level uinput virtual keyboard (Linux)
+        if self.uinput and self.uinput.is_available:
+            return self.uinput.paste()
+
         # Method 1: Atspi native (Wayland GNOME)
         if self.has_atspi:
             try:
@@ -323,3 +348,12 @@ class KeyInjector:
                 pass
 
         return False
+
+    def close(self) -> None:
+        """Release uinput virtual keyboard resources."""
+        if self.uinput:
+            try:
+                self.uinput.close()
+            except Exception:
+                pass
+            self.uinput = None
