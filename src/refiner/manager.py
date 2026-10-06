@@ -59,9 +59,15 @@ class RefinerManager:
         return self.engines["rules"]
 
     def refine(self, text: str, tone: str = "standard") -> str:
-        """Refine text using the best available engine."""
+        """Refine text using the best available engine with automatic fallback."""
         engine = self.get_active_engine()
-        return engine.refine(text, tone=tone)
+        result = engine.refine(text, tone=tone)
+        if result == text and engine != self.engines["rules"]:
+            # If AI engine returned unchanged or failed, fallback to rules engine
+            fallback = self.engines["rules"].refine(text, tone=tone)
+            if fallback and fallback != text:
+                return fallback
+        return result
 
     def get_last_explanations(self) -> list:
         """Retrieve explanations from the most recently used engine if supported."""

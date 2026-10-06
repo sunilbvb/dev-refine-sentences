@@ -19,11 +19,19 @@ class OllamaRefiner(BaseRefiner):
         return f"Local Ollama ({self.model})"
 
     def is_available(self) -> bool:
-        """Check if local Ollama daemon is reachable."""
+        """Check if local Ollama daemon is reachable and model is installed."""
         try:
             req = urllib.request.Request(f"{self.host}/api/tags", method="GET")
             with urllib.request.urlopen(req, timeout=1.5) as resp:
-                return resp.status == 200
+                if resp.status != 200:
+                    return False
+                data = json.loads(resp.read().decode("utf-8"))
+                models = [m.get("name", "") for m in data.get("models", [])]
+                target = self.model.strip()
+                return any(
+                    target == m or f"{target}:latest" == m or target.split(":")[0] == m.split(":")[0]
+                    for m in models
+                )
         except Exception:
             return False
 
