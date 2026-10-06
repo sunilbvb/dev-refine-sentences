@@ -119,7 +119,7 @@ dev-refine-sentences/
 │   └── refine-portal.desktop     # Desktop application entry
 ├── tests/                        # Automated unit test suite
 │   ├── __init__.py               # Package exports
-│   └── test_all.py               # Comprehensive unit tests (23 tests)
+│   └── test_all.py               # Comprehensive unit tests (31 tests)
 ├── index.html                    # Interactive web portal & developer documentation hub
 ├── main.py                       # Main CLI entry point
 ├── LICENSE                       # MIT License
@@ -178,6 +178,8 @@ When running, any hotkey press connects instantly to the resident daemon in RAM!
 
 ## ⌨️ 1-Click Global Shortcut Setup (Cross-Platform)
 
+> **Configuration without editing files:** `--set-model`, `--set-hotkey`, `--set-tone`, `--set-engine`, `--show-config`, or the **Settings** section of the web portal.
+
 Sentence Refiner works seamlessly across **Linux**, **macOS**, and **Windows** with 100% standard library tools (zero third-party dependencies):
 
 ### 🐧 Linux (Ubuntu GNOME / Wayland & X11)
@@ -191,13 +193,15 @@ bash scripts/setup_shortcuts.sh
 ---
 
 ### 🍏 macOS (MacBook, iMac, Mac Studio)
-Run the automated Quick Actions setup:
+A global hotkey listener works in **every** app, including Electron apps (Claude desktop) and web editors (Google Chat).
 ```bash
-bash scripts/setup_shortcuts_mac.sh
+brew install python            # Python 3.10+ is required (macOS ships 3.9)
+bash scripts/install_mac_hotkey.sh   # starts now and at every login
 ```
-* Creates native macOS Services: `Refine Sentence (Popup)` and `Refine Sentence (Flash)`.
-* Assign keys in **System Settings** ➔ **Keyboard** ➔ **Keyboard Shortcuts** ➔ **Services** (e.g. `⌘⇧R` / `Cmd+Shift+R`).
-* Uses native `pbcopy`, `pbpaste`, and `osascript` keystroke injection. Works in Safari, Chrome, Slack, VS Code, Notes, Mail, etc.
+* Default hotkey **`⌃⌥R`**. Change it any time: `python3 main.py --set-hotkey "cmd+a*2"` (double-tap `⌘A`), or use the web **Settings** page. Applies live.
+* Grant **Accessibility** (and **Input Monitoring** for double-tap hotkeys) to `Python.app` in System Settings ➔ Privacy & Security.
+* Local open model support via **Ollama** (`--set-model qwen2.5:3b`), no cloud needed.
+* Full guide, permissions, FAQ and troubleshooting: **[docs/MACOS_SETUP.md](docs/MACOS_SETUP.md)**.
 
 ---
 

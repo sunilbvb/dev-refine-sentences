@@ -148,6 +148,19 @@ class TestSentenceRefiner(unittest.TestCase):
         from http.server import HTTPServer
         from web_server.server import DocsRequestHandler
 
+        # Pin the rule engine and bypass the live daemon so the result does not depend on
+        # whether Ollama / the resident daemon happen to be running on this machine.
+        from unittest import mock
+        import web_server.server as web_server_module
+        patches = [
+            mock.patch.object(web_server_module, "query_daemon_refine", return_value=None),
+            mock.patch.object(web_server_module, "RefinerManager",
+                              lambda *a, **k: RefinerManager(preferred_engine="rules")),
+        ]
+        for patch in patches:
+            patch.start()
+            self.addCleanup(patch.stop)
+
         server = HTTPServer(("127.0.0.1", 0), DocsRequestHandler)
         port = server.server_address[1]
         t = threading.Thread(target=server.serve_forever, daemon=True)
@@ -174,8 +187,7 @@ class TestSentenceRefiner(unittest.TestCase):
             )
             resp = urllib.request.urlopen(post_req)
             ref_data = json.loads(resp.read().decode("utf-8"))
-            self.assertTrue(ref_data.get("refined"))
-            self.assertIn("fruit", ref_data["refined"].lower())
+            self.assertEqual(ref_data["refined"], "He goes to store and bought fruit.")
         finally:
             server.shutdown()
             server.server_close()
@@ -202,6 +214,74 @@ class TestSentenceRefiner(unittest.TestCase):
         self.assertEqual(se.correct_word("develpo")[0], "develop")
         # Protected whitelist word
         self.assertEqual(se.correct_word("Kubernetes", whitelist=["Kubernetes"])[0], "Kubernetes")
+
+
+class TestSettings(unittest.TestCase):
+    """Editable settings: validation, persistence, and the safe public view."""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory()
+        self.cfg = ConfigManager(config_dir=Path(self.tmp.name))
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_set_and_get_roundtrip(self):
+        self.assertEqual(self.cfg.set_setting("ollama_model", "qwen2.5:1.5b"), "qwen2.5:1.5b")
+        self.assertEqual(self.cfg.get_setting("ollama_model"), "qwen2.5:1.5b")
+        self.assertEqual(self.cfg.set_setting("preferred_tone", "CONCISE"), "concise")
+        self.assertEqual(self.cfg.set_setting("hotkey", "Ctrl+Alt+E"), "ctrl+alt+e")
+        self.assertEqual(self.cfg.set_setting("hotkey", "Cmd+A*2"), "cmd+a*2")
+
+    def test_invalid_values_rejected(self):
+        for key, bad in [("preferred_tone", "loud"), ("preferred_engine", "gpt9"),
+                         ("ollama_model", "has space"), ("ollama_model", ""),
+                         ("hotkey", "r"), ("hotkey", "ctrl+alt+1"), ("hotkey", "hyper+r")]:
+            with self.assertRaises(ValueError, msg=f"{key}={bad!r}"):
+                self.cfg.set_setting(key, bad)
+
+    def test_unknown_and_secret_keys_not_editable(self):
+        with self.assertRaises(ValueError):
+            self.cfg.set_setting("api_keys", "x")
+        with self.assertRaises(ValueError):
+            self.cfg.set_setting("whitelist", "x")
+
+    def test_public_settings_never_expose_key_values(self):
+        self.cfg.set_api_key("gemini", "SECRET-KEY-VALUE-123")
+        pub = self.cfg.public_settings()
+        self.assertNotIn("SECRET-KEY-VALUE-123", str(pub))
+        self.assertTrue(pub["api_keys_configured"]["gemini"])
+
+    def test_manager_uses_configured_ollama_model(self):
+        self.cfg.set_setting("ollama_model", "qwen2.5:1.5b")
+        mgr = RefinerManager(config_manager=self.cfg)
+        self.assertEqual(mgr.engines["ollama"].model, "qwen2.5:1.5b")
+        mgr = RefinerManager(preferred_engine="ollama", model="llama3.2", config_manager=self.cfg)
+        self.assertEqual(mgr.engines["ollama"].model, "llama3.2")
+
+
+class TestHotkeyParsing(unittest.TestCase):
+    def test_parse_hotkey(self):
+        from hotkey.mac_hotkey import parse_hotkey
+        self.assertEqual(parse_hotkey("ctrl+alt+r"), (15, 0x1000 | 0x800))
+        self.assertEqual(parse_hotkey("cmd+shift+e"), (14, 0x100 | 0x200))
+        self.assertEqual(parse_hotkey("Control+Option+R"), parse_hotkey("ctrl+alt+r"))
+
+    def test_parse_hotkey_spec_multi_tap(self):
+        from hotkey.mac_hotkey import parse_hotkey_spec
+        self.assertEqual(parse_hotkey_spec("cmd+a*2"), (0, 0x100, 2))
+        self.assertEqual(parse_hotkey_spec("Cmd+A * 2"), (0, 0x100, 2))
+        self.assertEqual(parse_hotkey_spec("ctrl+alt+r"), (15, 0x1000 | 0x800, 1))
+        for bad in ["cmd+a*4", "cmd+a*0", "cmd+a*x", "a*2"]:
+            with self.assertRaises(ValueError):
+                parse_hotkey_spec(bad)
+
+    def test_parse_hotkey_errors(self):
+        from hotkey.mac_hotkey import parse_hotkey
+        for bad in ["r", "ctrl+", "ctrl+alt+f13", "hyper+r"]:
+            with self.assertRaises(ValueError):
+                parse_hotkey(bad)
 
 
 if __name__ == "__main__":

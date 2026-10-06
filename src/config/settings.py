@@ -46,8 +46,40 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "anthropic": "",
     },
     "preferred_tone": "standard",
+    "preferred_engine": "auto",
+    "ollama_model": "qwen2.5:3b",
+    "hotkey": "ctrl+alt+r",
     "max_history_entries": 50,
 }
+
+TONES = ["standard", "concise", "professional", "friendly", "bullet_points", "email_formal"]
+ENGINES = ["auto", "rules", "gemini", "openai", "chatgpt", "claude", "anthropic", "ollama", "languagetool"]
+# Settings editable via CLI (--set-*) and the web portal. API keys are deliberately excluded
+# from the web path; they stay CLI/env only.
+EDITABLE_SETTINGS = ["preferred_tone", "preferred_engine", "ollama_model", "hotkey"]
+
+
+def validate_setting(key: str, value: str) -> str:
+    """Return the normalised value for an editable setting or raise ValueError."""
+    if key not in EDITABLE_SETTINGS:
+        raise ValueError(f"Unknown setting '{key}'.")
+    value = str(value).strip()
+    if key == "preferred_tone":
+        value = value.lower()
+        if value not in TONES:
+            raise ValueError(f"Tone must be one of: {', '.join(TONES)}")
+    elif key == "preferred_engine":
+        value = value.lower()
+        if value not in ENGINES:
+            raise ValueError(f"Engine must be one of: {', '.join(ENGINES)}")
+    elif key == "ollama_model":
+        if not value or any(c.isspace() for c in value) or len(value) > 100:
+            raise ValueError("Model name must be non-empty, without spaces (e.g. qwen2.5:3b).")
+    elif key == "hotkey":
+        from hotkey.mac_hotkey import parse_hotkey_spec
+        parse_hotkey_spec(value)  # raises ValueError on a bad combo
+        value = value.lower().replace(" ", "")
+    return value
 
 
 class ConfigManager:
@@ -147,9 +179,31 @@ class ConfigManager:
         cfg["api_keys"][prov] = key.strip()
         self._save_config(cfg)
 
+    def get_setting(self, key: str) -> Any:
+        return self.load_config().get(key, DEFAULT_CONFIG.get(key))
+
+    def set_setting(self, key: str, value: str) -> str:
+        """Validate and persist an editable setting. Returns the stored value."""
+        clean = validate_setting(key, value)
+        cfg = self.load_config()
+        cfg[key] = clean
+        self._save_config(cfg)
+        return clean
+
+    def public_settings(self) -> Dict[str, Any]:
+        """Editable settings plus API-key *status* (never the key values)."""
+        cfg = self.load_config()
+        out = {k: cfg.get(k, DEFAULT_CONFIG.get(k)) for k in EDITABLE_SETTINGS}
+        out["api_keys_configured"] = {
+            p: bool(self.get_api_key(p)) for p in ("gemini", "openai", "anthropic")
+        }
+        return out
+
     def _save_config(self, cfg: Dict[str, Any]) -> None:
         try:
-            with open(self.config_file, "w", encoding="utf-8") as f:
+            tmp = self.config_file.with_suffix(".json.tmp")
+            with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(cfg, f, indent=2)
+            os.replace(tmp, self.config_file)  # atomic: readers never see a half-written file
         except Exception:
             pass

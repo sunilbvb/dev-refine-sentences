@@ -5,6 +5,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize UI navigation
   window.TabManager.init();
+  if (window.SettingsPanel) window.SettingsPanel.init();
 
   const inputBox = document.getElementById("playground-input");
   const diffDisplay = document.getElementById("diff-display");

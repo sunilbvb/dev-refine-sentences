@@ -39,14 +39,14 @@ def main() -> None:
     parser.add_argument(
         "--tone",
         choices=["standard", "concise", "professional", "friendly", "bullet_points", "email_formal"],
-        default="standard",
-        help="Refinement tone style.",
+        default=None,
+        help="Refinement tone style (default: 'preferred_tone' from config).",
     )
     parser.add_argument(
         "--engine",
         choices=["auto", "rules", "gemini", "openai", "chatgpt", "claude", "anthropic", "ollama", "languagetool"],
-        default="auto",
-        help="Refinement engine backend.",
+        default=None,
+        help="Refinement engine backend (default: 'preferred_engine' from config).",
     )
     parser.add_argument(
         "--model",
@@ -96,6 +96,21 @@ def main() -> None:
         help="Run as a persistent resident background daemon in RAM for sub-5ms latency.",
     )
     parser.add_argument(
+        "--hotkey",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="COMBO",
+        help="macOS: run a global hotkey listener that refines the selection in any app. "
+             "Without COMBO the 'hotkey' config value is used and changes apply live.",
+    )
+    for _name, _meta in (("model", "NAME"), ("hotkey", "COMBO"), ("tone", "TONE"), ("engine", "ENGINE")):
+        parser.add_argument(
+            f"--set-{_name}", metavar=_meta,
+            help=f"Save the default {_name} to the config and exit.",
+        )
+    parser.add_argument("--show-config", action="store_true", help="Print the current settings and exit.")
+    parser.add_argument(
         "--serve",
         nargs="?",
         const=8080,
@@ -106,10 +121,42 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # Persist settings (--set-model/--set-hotkey/--set-tone/--set-engine) and exit
+    _setting_keys = {"model": "ollama_model", "hotkey": "hotkey", "tone": "preferred_tone", "engine": "preferred_engine"}
+    _changed = False
+    for _name, _key in _setting_keys.items():
+        _val = getattr(args, f"set_{_name}")
+        if _val is not None:
+            try:
+                print(f"{_key} = {config_mgr.set_setting(_key, _val)}")
+            except ValueError as exc:
+                sys.exit(f"Error: {exc}")
+            _changed = True
+    if args.show_config:
+        for _k, _v in config_mgr.public_settings().items():
+            print(f"{_k} = {_v}")
+        return
+    if _changed:
+        return
+
+    # Explicit flags win; otherwise fall back to the saved config
+    explicit_tone, explicit_engine = args.tone, args.engine
+    args.tone = args.tone or config_mgr.get_setting("preferred_tone") or "standard"
+    args.engine = args.engine or config_mgr.get_setting("preferred_engine") or "auto"
+
     # Handle web server startup
     if args.serve is not None:
         from web_server import run_docs_server
         run_docs_server(port=args.serve)
+        return
+
+    # Handle macOS global hotkey listener
+    if args.hotkey is not None:
+        from hotkey import run_hotkey_listener
+        run_hotkey_listener(
+            config_mgr, ClipboardManager(), KeyInjector(), history_mgr,
+            hotkey=args.hotkey or None, tone=explicit_tone, engine=explicit_engine, model=args.model,
+        )
         return
 
     # Handle daemon mode startup

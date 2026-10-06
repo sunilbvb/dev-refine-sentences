@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-10-06
+
+### Added
+- **macOS global hotkey listener (`--hotkey`)**: refines the selection in any app (Electron, browsers, native) via Cmd+C / refine / Cmd+V. Carbon hotkey for normal combos, passive CGEventTap for multi-tap combos (`cmd+a*2`).
+- **Live-reloading settings**: `--set-model`, `--set-hotkey`, `--set-tone`, `--set-engine`, `--show-config`; tone/engine/model apply on the next press, a changed hotkey re-execs the listener.
+- **Web Settings page** with `GET/POST /api/config` and `GET /api/ollama/models` (origin-checked, JSON-only, never returns API keys).
+- `scripts/install_mac_hotkey.sh`: LaunchAgent login item.
+- `docs/MACOS_SETUP.md`: full macOS guide, workflow, permissions, model sizing, FAQ.
+- Config keys `ollama_model` (default `qwen2.5:3b`), `hotkey`, `preferred_engine`; atomic config writes.
+
+### Changed
+- Ollama engine keeps the model loaded (`keep_alive` 30 min) and waits up to 60 s (was 10 s, which silently returned the unchanged text on a cold start).
+- The daemon rebuilds its engine when `config.json` changes.
+- `--tone` / `--engine` default to the saved config instead of fixed values.
+- `scripts/setup_shortcuts_mac.sh` now installs the hotkey listener (the Services/Quick Action approach did not work in Electron apps or web editors).
+- The web-server test pins the rule engine so it no longer depends on a running Ollama/daemon.
+
 ## [1.2.0] - 2026-10-03
 
 ### Added

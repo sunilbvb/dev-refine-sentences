@@ -29,10 +29,26 @@ class RefineDaemon:
     def __init__(self):
         self.config_mgr = ConfigManager()
         self.history_mgr = HistoryManager()
-        self.refiner_mgr = RefinerManager(config_manager=self.config_mgr)
+        self._mgr = None
+        self._mgr_mtime = None
         self.clipboard = ClipboardManager()
         self.injector = KeyInjector()
         self.running = False
+
+    @property
+    def refiner_mgr(self) -> RefinerManager:
+        """Rebuilt whenever config.json changes, so engine/model settings apply live."""
+        try:
+            mtime = self.config_mgr.config_file.stat().st_mtime
+        except OSError:
+            mtime = None
+        if self._mgr is None or mtime != self._mgr_mtime:
+            self._mgr = RefinerManager(
+                preferred_engine=self.config_mgr.get_setting("preferred_engine") or "auto",
+                config_manager=self.config_mgr,
+            )
+            self._mgr_mtime = mtime
+        return self._mgr
 
     def start(self) -> None:
         """Start the background resident daemon."""

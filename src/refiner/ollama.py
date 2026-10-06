@@ -51,6 +51,7 @@ class OllamaRefiner(BaseRefiner):
             "model": self.model,
             "prompt": prompt,
             "stream": False,
+            "keep_alive": "30m",  # keep the model resident so later calls skip the cold start
             "options": {
                 "temperature": 0.2,
                 "top_p": 0.9,
@@ -66,7 +67,7 @@ class OllamaRefiner(BaseRefiner):
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=10.0) as resp:
+            with urllib.request.urlopen(req, timeout=60.0) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
                 output = result.get("response", "").strip()
                 # Strip wrapping quotes if added by model

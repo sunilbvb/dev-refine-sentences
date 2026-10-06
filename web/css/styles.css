@@ -628,3 +628,18 @@ footer {
   font-size: 13px;
   margin-top: 48px;
 }
+
+/* ---- Settings panel ---- */
+.settings-section { margin: 32px 0; }
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.settings-field label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+.settings-field select, .settings-field input {
+  width: 100%; box-sizing: border-box; padding: 9px 11px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-base); color: var(--text-main);
+  font-family: var(--font-mono); font-size: 0.9rem;
+}
+.settings-field small { display: block; margin-top: 5px; color: var(--text-muted); font-size: 0.78rem; }
+.settings-actions { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+.settings-status { font-size: 0.85rem; }
+.settings-status.ok { color: var(--success); }
+.settings-status.err { color: var(--danger); }

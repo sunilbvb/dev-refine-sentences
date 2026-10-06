@@ -21,6 +21,7 @@ This document describes the architectural design, component interactions, and ex
    - `history/`: Persistent audit logging and undo buffer.
    - `clipboard/`: Cross-environment clipboard extraction and population.
    - `injector/`: OS-level keystroke injection and desktop notifications.
+   - `hotkey/`: macOS global hotkey / multi-tap listener (ctypes over Carbon & Quartz) that drives the copy, refine, paste pipeline. See [MACOS_SETUP.md](MACOS_SETUP.md).
    - `ui/`: Desktop graphical user interface (Tkinter), diff tokenizer, and settings dialog.
    - `tests/`: Automated unit test suite.
 
@@ -123,6 +124,9 @@ flowchart TD
 
 ### `src/injector/`
 - [`injector.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/injector/injector.py): Keystroke injection via `ydotool`, `wtype`, or `xdotool`. Sends desktop notifications via `notify-send`.
+
+### `src/hotkey/`
+- [`mac_hotkey.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/hotkey/mac_hotkey.py): Native macOS global hotkey and multi-tap listener using pure standard library `ctypes` over Carbon and Quartz frameworks.
 
 ### `src/ui/`
 - [`diff_highlighter.py`](file:///home/sunil-bakale/IdeaProjects/dev-refine-sentences/src/ui/diff_highlighter.py): Word-level diff tokenizer powered by `difflib.SequenceMatcher`.

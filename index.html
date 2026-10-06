@@ -18,6 +18,7 @@
 
     <nav>
       <a href="#playground">Playground</a>
+      <a href="#settings">Settings</a>
       <a href="#docs">Documentation</a>
       <a href="#server-setup">Server Setup</a>
       <a href="#architecture">Architecture</a>
@@ -129,6 +130,29 @@
     </section>
 
     <!-- Comprehensive Documentation & Developer Guide Tabs -->
+    <!-- Settings Section -->
+    <section class="settings-section" id="settings">
+      <div class="doc-card" id="settings-panel">
+        <h2>⚙️ Settings</h2>
+        <p>Changes are saved to <code>~/.config/refine_tool/config.json</code> and apply instantly to the hotkey, daemon and CLI.</p>
+        <div class="settings-grid">
+          <div class="settings-field"><label for="set-tone">Default tone</label><select id="set-tone"></select></div>
+          <div class="settings-field"><label for="set-engine">Engine</label><select id="set-engine"></select>
+            <small>auto = Gemini &rarr; OpenAI &rarr; Claude &rarr; Ollama &rarr; LanguageTool &rarr; rules</small></div>
+          <div class="settings-field"><label for="set-model">Local model (Ollama)</label><select id="set-model"></select>
+            <small id="set-model-hint"></small></div>
+          <div class="settings-field"><label for="set-hotkey">Global hotkey (macOS)</label>
+            <input id="set-hotkey" type="text" placeholder="ctrl+alt+r" spellcheck="false">
+            <small>Modifiers: ctrl, alt, shift, cmd + a letter, e.g. ctrl+alt+r. Add *2 to require a double-tap, e.g. cmd+a*2</small></div>
+        </div>
+        <p><small>API keys (set via <code>--set-key</code>): <span id="set-keys"></span></small></p>
+        <div class="settings-actions">
+          <button class="btn-server" id="btn-save-settings">💾 Save settings</button>
+          <span class="settings-status" id="settings-status"></span>
+        </div>
+      </div>
+    </section>
+
     <section class="docs-section" id="docs">
       <div class="docs-nav">
         <button class="tab-btn active" data-tab="server-setup">⚡ Server & Daemon Setup</button>
@@ -460,6 +484,7 @@ print(json.loads(data))
   <script src="web/js/modules/rules_engine.js"></script>
   <script src="web/js/modules/api_client.js"></script>
   <script src="web/js/modules/tabs.js"></script>
+  <script src="web/js/modules/settings.js"></script>
   <script src="web/js/app.js"></script>
 
 </body>

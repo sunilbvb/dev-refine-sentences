@@ -27,6 +27,9 @@ class RefinerManager:
         openai_model = model if model and preferred_engine in ["openai", "chatgpt"] else "gpt-4o-mini"
         claude_model = model if model and preferred_engine in ["claude", "anthropic"] else "claude-3-5-haiku-20241022"
         ollama_model = model if model and preferred_engine == "ollama" else "qwen2.5:0.5b"
+        if not (model and preferred_engine == "ollama") and config_manager is not None:
+            # Default local model comes from config ("ollama_model"); --model overrides it.
+            ollama_model = config_manager.load_config().get("ollama_model", ollama_model)
 
         self.engines: Dict[str, BaseRefiner] = {
             "rules": RuleBasedRefiner(config_manager=config_manager),

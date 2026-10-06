@@ -123,3 +123,35 @@ bash scripts/setup_ollama.sh
 ```
 This script checks/installs Ollama, starts the daemon, and pulls the lightweight `qwen2.5:0.5b` model (~390MB, sub-second responses). Once active, `dev-refine-sentences` automatically detects Ollama and uses it as the primary offline engine.
 
+---
+
+## macOS & Local Models
+
+### Q: What is the macOS hotkey, and how do I change it?
+A: Default **`Ctrl+Option+R`**. Run `python3 main.py --set-hotkey "cmd+shift+e"` or use the web Settings page. It applies live, with no restart. Syntax: modifiers (`ctrl`, `alt`, `shift`, `cmd`) plus one letter; add `*2` for a double tap (e.g. `cmd+a*2`).
+
+### Q: Can I use two letters, like A and R together?
+A: No. macOS global hotkeys support modifiers plus a single key. Use a double tap (`*2`) instead.
+
+### Q: Is `cmd+a*2` (double Cmd+A) safe?
+A: It works, but it refines the **whole text field** (Cmd+A selects everything), and a habitual double Cmd+A will rewrite your text. Cmd+Z undoes it. It also needs **Input Monitoring** permission. `ctrl+alt+a*2` is safer.
+
+### Q: Why does it say "Accessibility not granted" although I enabled Python?
+A: Enable the exact `Python.app` under System Settings > Privacy & Security > Accessibility, then **restart the listener** (`launchctl kickstart -k gui/$(id -u)/com.refine.hotkey`). If you start the listener from inside another app, macOS may check that app instead; the LaunchAgent avoids this.
+
+### Q: It worked in TextEdit via a Quick Action but not in Claude desktop or Google Chat. Why?
+A: macOS Services (Quick Actions) are not supported by Electron apps or web editors. The global hotkey listener does not use Services, so it works everywhere.
+
+### Q: Which local model should I use?
+A: Default `qwen2.5:3b` (~2 GB, 1-2 s) or lightweight `qwen2.5:0.5b` (~390MB, <1s). Large models (e.g. 9.6 GB `gemma4`) can take **minutes** on a 16 GB Mac under memory pressure. Change with `--set-model NAME` or the Settings page; list installed models with `ollama list`.
+
+### Q: It is very slow, what do I check?
+A: `ollama ps` (what is loaded), `sysctl vm.swapusage` (is the Mac swapping?), then use a smaller model and quit heavy apps (iOS Simulator, Docker).
+
+### Q: Can Claude desktop be refined with a Chrome extension?
+A: No. A Chrome extension only reaches web pages. The hotkey listener covers native and Electron apps.
+
+### Q: Does the web Settings page expose my API keys?
+A: No. The API reports only whether a key is configured, and keys can only be set via the CLI or environment variables. Writes are accepted only from the local portal itself.
+
+
