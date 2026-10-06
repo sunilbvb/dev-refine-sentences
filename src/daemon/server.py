@@ -199,8 +199,14 @@ class RefineDaemon:
             raw_text = self.clipboard.get_text()
 
         if not raw_text or not raw_text.strip():
-            self.injector.notify("Sentence Refiner", "Please highlight text to refine, then press Alt + A twice.")
+            self.injector.notify("Sentence Refiner", "Please highlight text to refine, then press Alt + S twice.")
             return
+
+        try:
+            with open("/tmp/refine_hotkey.log", "a") as f:
+                f.write(f"[{time.strftime('%X')}] _handle_request processing: {raw_text!r}\n")
+        except Exception:
+            pass
 
         raw_text = raw_text.strip()
         active_engine = self.refiner_mgr.get_active_engine()

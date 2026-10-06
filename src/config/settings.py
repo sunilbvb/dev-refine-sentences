@@ -211,6 +211,9 @@ class ConfigManager:
                 "shift": "<Shift>", "super": "<Super>", "cmd": "<Super>", "win": "<Super>",
             }
             gnome_mods = "".join(mod_map.get(m, "") for m in parts[:-1])
+            # GNOME media-keys rejects single <Alt>+letter with 'Failed to grab accelerator'
+            if gnome_mods == "<Alt>":
+                gnome_mods = "<Ctrl><Alt>"
             gnome_binding = f"{gnome_mods}{base_key}"
 
             path = (

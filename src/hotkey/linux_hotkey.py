@@ -29,16 +29,18 @@ LINUX_KEY_CODES: Dict[str, int] = {
 }
 
 LINUX_MODIFIER_CODES: Dict[str, Set[int]] = {
-    "alt": {56, 100},       # KEY_LEFTALT, KEY_RIGHTALT
-    "ctrl": {29, 97},       # KEY_LEFTCTRL, KEY_RIGHTCTRL
-    "shift": {42, 54},      # KEY_LEFTSHIFT, KEY_RIGHTSHIFT
-    "super": {125, 126},    # KEY_LEFTMETA, KEY_RIGHTMETA
+    # On Linux with Toshy/Kinto keyremapper, physical Alt may be remapped to Super (Meta) or Option
+    "alt": {56, 100, 125, 126},       # KEY_LEFTALT, KEY_RIGHTALT, KEY_LEFTMETA, KEY_RIGHTMETA
+    "super": {125, 126, 56, 100},     # KEY_LEFTMETA, KEY_RIGHTMETA, KEY_LEFTALT, KEY_RIGHTALT
+    "ctrl": {29, 97},                 # KEY_LEFTCTRL, KEY_RIGHTCTRL
+    "shift": {42, 54},                # KEY_LEFTSHIFT, KEY_RIGHTSHIFT
 }
 
 CODE_TO_MODIFIER: Dict[int, str] = {}
 for mod_name, codes in LINUX_MODIFIER_CODES.items():
     for c in codes:
-        CODE_TO_MODIFIER[c] = mod_name
+        if c not in CODE_TO_MODIFIER:
+            CODE_TO_MODIFIER[c] = mod_name
 
 
 def discover_keyboard_devices() -> List[str]:
@@ -71,9 +73,9 @@ class LinuxHotkeyListener:
 
     def __init__(
         self,
-        hotkey_spec: str = "alt+a*2",
+        hotkey_spec: str = "alt+s*2",
         on_trigger: Optional[Callable[[], None]] = None,
-        tap_window: float = 0.55,
+        tap_window: float = 0.8,
     ):
         self.hotkey_spec = hotkey_spec
         self.on_trigger = on_trigger
@@ -184,19 +186,28 @@ class LinuxHotkeyListener:
                             if code == self.target_code and val == 1:
                                 # Check if required modifiers are satisfied
                                 if self.required_mods.issubset(active_mods):
-                                    # Ensure no unwanted major modifiers (e.g. don't fire if user pressed Ctrl+Alt+A when only Alt was requested)
-                                    extra_mods = active_mods - self.required_mods
-                                    # Allow shift optionally, but prevent ctrl or super interference
-                                    if not (extra_mods & {"ctrl", "super"}):
+                                    # Ensure no unwanted ctrl modifier
+                                    if "ctrl" not in active_mods:
                                         if now - last_tap_time <= self.tap_window:
                                             tap_count += 1
                                         else:
                                             tap_count = 1
                                         last_tap_time = now
 
+                                        try:
+                                            with open("/tmp/refine_hotkey.log", "a") as f:
+                                                f.write(f"[{time.strftime('%X')}] Tap {tap_count}/{self.required_taps} detected for {self.hotkey_spec}\n")
+                                        except Exception:
+                                            pass
+
                                         if tap_count >= self.required_taps:
                                             tap_count = 0
                                             last_tap_time = 0.0
+                                            try:
+                                                with open("/tmp/refine_hotkey.log", "a") as f:
+                                                    f.write(f"[{time.strftime('%X')}] TRIGGER FIRED for {self.hotkey_spec}!\n")
+                                            except Exception:
+                                                pass
                                             if self.on_trigger:
                                                 # Dispatch trigger in background thread so loop continues
                                                 threading.Thread(target=self.on_trigger, daemon=True).start()
