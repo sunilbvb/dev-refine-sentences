@@ -192,14 +192,29 @@ class RefineDaemon:
         time.sleep(0.04)
         self.injector.release_modifiers()
 
-        # Step 1: Capture highlighted text directly via primary selection or Atspi
+        # Step 1: Capture text
+        # Strategy A: Check primary selection (if user highlighted with mouse)
         raw_text = self.clipboard.get_primary_selection()
+
+        # Strategy B: If primary is empty, try copy of highlighted text
         if not raw_text or not raw_text.strip():
+            sentinel = f"__REFINE_{time.time()}__"
+            self.clipboard.set_text(sentinel)
             self.injector.simulate_copy()
-            raw_text = self.clipboard.get_text()
+            copied = self.clipboard.get_text()
+            if copied and copied != sentinel and copied.strip():
+                raw_text = copied
+            else:
+                # Strategy C: User is in an input field (e.g. Antigravity chat, Google Chat)
+                # without selecting text! Select all with Ctrl+A, then Copy!
+                self.injector.simulate_select_all()
+                self.injector.simulate_copy()
+                copied_all = self.clipboard.get_text()
+                if copied_all and copied_all != sentinel and copied_all.strip():
+                    raw_text = copied_all
 
         if not raw_text or not raw_text.strip():
-            self.injector.notify("Sentence Refiner", "Please highlight text to refine, then press Alt + S twice.")
+            self.injector.notify("Sentence Refiner", "Please type or select text, then press Alt + S twice.")
             return
 
         try:

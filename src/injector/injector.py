@@ -121,6 +121,44 @@ class KeyInjector:
             except Exception:
                 pass
 
+    def simulate_select_all(self) -> bool:
+        """Simulate Select All (Ctrl+A / Cmd+A) in the active focused field."""
+        if self.is_mac or self.osascript:
+            try:
+                subprocess.run(
+                    ["osascript", "-e", 'tell application "System Events" to keystroke "a" using command down'],
+                    check=False,
+                    timeout=0.8,
+                )
+                time.sleep(0.06)
+                return True
+            except Exception:
+                pass
+
+        if self.has_atspi:
+            try:
+                import gi
+                gi.require_version("Atspi", "2.0")
+                from gi.repository import Atspi
+
+                self.release_modifiers()
+                time.sleep(0.02)
+                ctrl_codes = self._get_keycodes(0xffe3, [37])
+                a_codes = self._get_keycodes(0x61, [38])
+                ctrl_code = ctrl_codes[0] if ctrl_codes else 37
+                a_code = a_codes[0] if a_codes else 38
+
+                Atspi.generate_keyboard_event(ctrl_code, None, Atspi.KeySynthType.PRESS)
+                Atspi.generate_keyboard_event(a_code, None, Atspi.KeySynthType.PRESS)
+                Atspi.generate_keyboard_event(a_code, None, Atspi.KeySynthType.RELEASE)
+                Atspi.generate_keyboard_event(ctrl_code, None, Atspi.KeySynthType.RELEASE)
+                time.sleep(0.06)
+                return True
+            except Exception:
+                pass
+
+        return False
+
     def simulate_copy(self) -> bool:
         """Simulate copy (Cmd+C on macOS, Ctrl+C on Linux/Windows) to copy selected text."""
         # Method 0: macOS native via osascript (Cmd+C)
