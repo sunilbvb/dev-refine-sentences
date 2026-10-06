@@ -29,10 +29,10 @@ LINUX_KEY_CODES: Dict[str, int] = {
 }
 
 LINUX_MODIFIER_CODES: Dict[str, Set[int]] = {
-    # On Linux with Toshy/Kinto keyremapper, physical Alt may be remapped to Super (Meta) or Option
-    "alt": {56, 100, 125, 126},       # KEY_LEFTALT, KEY_RIGHTALT, KEY_LEFTMETA, KEY_RIGHTMETA
-    "super": {125, 126, 56, 100},     # KEY_LEFTMETA, KEY_RIGHTMETA, KEY_LEFTALT, KEY_RIGHTALT
-    "ctrl": {29, 97},                 # KEY_LEFTCTRL, KEY_RIGHTCTRL
+    # On Linux with Toshy/Kinto keyremapper, physical Left Alt emits 97 (KEY_RIGHTCTRL as Cmd) or 125 (KEY_LEFTMETA) or 56 (KEY_LEFTALT)
+    "alt": {56, 100, 125, 126, 97},
+    "super": {125, 126, 56, 100, 97},
+    "ctrl": {29},                     # Only physical Left Ctrl (29) is true Ctrl
     "shift": {42, 54},                # KEY_LEFTSHIFT, KEY_RIGHTSHIFT
 }
 
