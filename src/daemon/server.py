@@ -115,6 +115,10 @@ class RefineDaemon:
         signal.signal(signal.SIGINT, handle_shutdown)
         signal.signal(signal.SIGTERM, handle_shutdown)
 
+        # Warm manager up on start and watch config for live updates from Web UI / CLI
+        _ = self.refiner_mgr
+        threading.Thread(target=self._watch_config_loop, daemon=True, name="ConfigWatcher").start()
+
         print(f"✨ RefineDaemon started in RAM. Listening on {SOCKET_PATH}")
         print("Sub-5ms zero-latency refinement ready!")
 
@@ -162,6 +166,24 @@ class RefineDaemon:
                 ).start()
             except Exception as e:
                 pass
+
+    def _watch_config_loop(self) -> None:
+        """Poll config file mtime every 1s to apply live hotkey and engine updates from Web UI or CLI."""
+        while self.running:
+            time.sleep(1.0)
+            try:
+                mtime = self.config_mgr.config_file.stat().st_mtime
+            except OSError:
+                continue
+            if self._mgr_mtime is not None and mtime != self._mgr_mtime:
+                # Trigger live reload of manager and hotkey listener
+                _ = self.refiner_mgr
+                new_hotkey = self.config_mgr.get_setting("hotkey")
+                try:
+                    with open("/tmp/refine_hotkey.log", "a") as f:
+                        f.write(f"[{time.strftime('%X')}] Config updated live from Web UI/CLI! Active hotkey: {new_hotkey!r}\n")
+                except Exception:
+                    pass
 
     def _should_trigger_tap(self, mode: str) -> bool:
         """Check multi-tap timing if shortcut is configured with *2 or *3."""
